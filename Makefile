@@ -15,7 +15,7 @@ $(BIN_GODOC):
 	go install golang.org/x/tools/cmd/godoc@v0.28.0
 
 .PHONY: lint
-lint:
+lint: $(BIN_GOLANGCI_LINT)
 	$(BIN_GOLANGCI_LINT) run ./...
 
 .PHONY: godoc
