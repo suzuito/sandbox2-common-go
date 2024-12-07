@@ -1,0 +1,14 @@
+name: on_push_main
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
+  push:
+    branches:
+      - main
+
+jobs:
+  gotest:
+    uses: ./.github/workflows/_gotest.yaml
+  golint:
+    uses: ./.github/workflows/_golint.yaml
