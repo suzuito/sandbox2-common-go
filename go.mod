@@ -9,6 +9,7 @@ require (
 	github.com/air-verse/air v1.61.1
 	github.com/golangci/golangci-lint v1.62.2
 	github.com/google/uuid v1.6.0
+	github.com/google/wire v0.6.0
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/pkgsite v0.0.0-20241206194728-dc08416c8122
 )
@@ -88,6 +89,7 @@ require (
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/licensecheck v0.3.1 // indirect
 	github.com/google/safehtml v0.0.3-0.20211026203422-d6f0e11a5516 // indirect
+	github.com/google/subcommands v1.2.0 // indirect
 	github.com/gordonklaus/ineffassign v0.1.0 // indirect
 	github.com/gostaticanalysis/analysisutil v0.7.1 // indirect
 	github.com/gostaticanalysis/comment v1.4.2 // indirect

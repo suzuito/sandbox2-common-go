@@ -2,22 +2,32 @@ package usecases
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/Masterminds/semver/v3"
+	"github.com/suzuito/sandbox2-common-go/terrors"
+	"github.com/suzuito/sandbox2-common-go/tools/release/internal/businesslogics"
+	"github.com/suzuito/sandbox2-common-go/tools/release/internal/domains"
 )
 
 type impl struct {
+	businessLogic businesslogics.BusinessLogic
 }
 
-func (t *impl) ValidateReleaseVersion(
+func (t *impl) IncrementVersion(
 	ctx context.Context,
-	versionString string,
+	prefix string,
+	incrementType domains.IncrementType,
 ) error {
-	semver.NewVersion(versionString)
-	return fmt.Errorf("not impl")
+	if err := t.businessLogic.IncrementVersion(ctx, prefix, incrementType); err != nil {
+		return terrors.Wrapf("failed to IncrementVersion: %w", err)
+	}
+
+	return nil
 }
 
-func New() *impl {
-	return &impl{}
+func New(
+	businessLogic businesslogics.BusinessLogic,
+) *impl {
+	return &impl{
+		businessLogic: businessLogic,
+	}
 }
