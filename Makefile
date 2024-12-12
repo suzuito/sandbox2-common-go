@@ -1,7 +1,6 @@
 BIN_AIR = $(shell go env GOPATH)/bin/air
 BIN_PKGSITE = $(shell go env GOPATH)/bin/pkgsite
 BIN_GOLANGCI_LINT = $(shell go env GOPATH)/bin/golangci-lint
-BIN_WIRE = $(shell go env GOPATH)/bin/wire
 
 .PHONY: mac-init
 mac-init:
@@ -15,9 +14,6 @@ $(BIN_AIR):
 $(BIN_PKGSITE):
 	go install golang.org/x/pkgsite/cmd/pkgsite
 
-$(BIN_WIRE):
-	go install github.com/google/wire/cmd/wire
-
 .PHONY: lint
 lint: $(BIN_GOLANGCI_LINT)
 	$(BIN_GOLANGCI_LINT) run ./...
@@ -29,3 +25,11 @@ godoc: $(BIN_AIR) $(BIN_PKGSITE)
 .PHONY: test
 test:
 	go test ./...
+
+.PHONY: build-increment-release-prd
+build-increment-release-prd:
+	mkdir -p dist/prd && go build -o dist/prd/increment-release-version tools/release/cmd/increment-release-version/*.go
+
+.PHONY: clean
+clean:
+	rm -fr dist/

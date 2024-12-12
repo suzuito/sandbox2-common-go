@@ -7,5 +7,12 @@ import (
 )
 
 type ReleaseRepository interface {
-	CreateDraft(ctx context.Context, version *semver.Version) error
+	CreateDraft(
+		ctx context.Context,
+		githubOwner string,
+		githubRepo string,
+		branch string,
+		prefix string,
+		version *semver.Version,
+	) error
 }

@@ -7,5 +7,5 @@ import (
 )
 
 type VersionFetcher interface {
-	GetLatestVersion(ctx context.Context) (*semver.Version, error)
+	GetLatestVersion(ctx context.Context, prefix string) (*semver.Version, error)
 }

@@ -13,22 +13,30 @@ import (
 type BusinessLogic interface {
 	IncrementVersion(
 		ctx context.Context,
+		githubOwner string,
+		githubRepo string,
+		branch string,
 		prefix string,
 		incrementType domains.IncrementType,
 	) error
 }
 
-type impl struct {
+type Impl struct {
 	versionFetcher    gateways.VersionFetcher
 	releaseRepository repositories.ReleaseRepository
 }
 
-func (t *impl) IncrementVersion(
+var _ BusinessLogic = &Impl{}
+
+func (t *Impl) IncrementVersion(
 	ctx context.Context,
+	githubOwner string,
+	githubRepo string,
+	branch string,
 	prefix string,
 	incrementType domains.IncrementType,
 ) error {
-	latestVersion, err := t.versionFetcher.GetLatestVersion(ctx)
+	latestVersion, err := t.versionFetcher.GetLatestVersion(ctx, prefix)
 	if err != nil {
 		return terrors.Wrapf("failed to GetLatestVersion: %w", err)
 	}
@@ -45,7 +53,14 @@ func (t *impl) IncrementVersion(
 		return terrors.Wrapf("invalid latest version: %s", latestVersion)
 	}
 
-	if err := t.releaseRepository.CreateDraft(ctx, &nextVersion); err != nil {
+	if err := t.releaseRepository.CreateDraft(
+		ctx,
+		githubOwner,
+		githubRepo,
+		branch,
+		prefix,
+		&nextVersion,
+	); err != nil {
 		return terrors.Wrapf("failed to CreateDraft: %w", err)
 	}
 
@@ -55,8 +70,8 @@ func (t *impl) IncrementVersion(
 func New(
 	versionFetcher gateways.VersionFetcher,
 	releaseRepository repositories.ReleaseRepository,
-) *impl {
-	return &impl{
+) *Impl {
+	return &Impl{
 		versionFetcher:    versionFetcher,
 		releaseRepository: releaseRepository,
 	}

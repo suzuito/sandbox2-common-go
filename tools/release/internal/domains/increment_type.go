@@ -11,6 +11,7 @@ func (t *IncrementType) String() string {
 func (t *IncrementType) Validate() error {
 	switch *t {
 	case IncrementTypeMajor, IncrementTypeMinor, IncrementTypePatch:
+		return nil
 	}
 	return fmt.Errorf("unknown increment type %s", *t)
 }

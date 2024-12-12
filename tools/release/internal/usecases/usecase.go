@@ -2,22 +2,49 @@ package usecases
 
 import (
 	"context"
+	"log"
 
 	"github.com/suzuito/sandbox2-common-go/terrors"
 	"github.com/suzuito/sandbox2-common-go/tools/release/internal/businesslogics"
 	"github.com/suzuito/sandbox2-common-go/tools/release/internal/domains"
 )
 
-type impl struct {
+type Usecase interface {
+	IncrementVersion(
+		ctx context.Context,
+		githubOwner string,
+		githubRepo string,
+		branch string,
+		prefix string,
+		incrementTypeString string,
+	) error
+}
+
+type Impl struct {
 	businessLogic businesslogics.BusinessLogic
 }
 
-func (t *impl) IncrementVersion(
+func (t *Impl) IncrementVersion(
 	ctx context.Context,
+	githubOwner string,
+	githubRepo string,
+	branch string,
 	prefix string,
-	incrementType domains.IncrementType,
+	incrementTypeString string,
 ) error {
-	if err := t.businessLogic.IncrementVersion(ctx, prefix, incrementType); err != nil {
+	incrementType := domains.IncrementType(incrementTypeString)
+	if err := incrementType.Validate(); err != nil {
+		log.Fatalf("invalid increment type '%s'", incrementType)
+	}
+
+	if err := t.businessLogic.IncrementVersion(
+		ctx,
+		githubOwner,
+		githubRepo,
+		branch,
+		prefix,
+		incrementType,
+	); err != nil {
 		return terrors.Wrapf("failed to IncrementVersion: %w", err)
 	}
 
@@ -26,8 +53,8 @@ func (t *impl) IncrementVersion(
 
 func New(
 	businessLogic businesslogics.BusinessLogic,
-) *impl {
-	return &impl{
+) *Impl {
+	return &Impl{
 		businessLogic: businessLogic,
 	}
 }
