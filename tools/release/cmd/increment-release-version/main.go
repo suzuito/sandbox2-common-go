@@ -83,10 +83,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	uc := inject.NewUsecase(
+	uc, err := inject.NewUsecase(
 		filePathGit,
 		githubAppToken,
 	)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to inject.NewUsecase: %+v\n", err)
+		os.Exit(1)
+	}
+
 	if err := uc.IncrementVersion(
 		ctx,
 		githubOwner,

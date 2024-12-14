@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -20,12 +21,35 @@ func TestA(t *testing.T) {
 	testCases := []struct {
 		desc             string
 		args             []string
+		setup            func() error
 		expectedExitCode int
 		expectedStdout   string
 		expectedStderr   string
 	}{
 		{
-			desc:             "",
+			desc: "ok",
+			setup: func() error {
+				f, err := os.Create("/tmp/e2e001.sh")
+				if err != nil {
+					return err
+				}
+				defer f.Close()
+
+				f.Chmod(0755)
+
+				fmt.Fprintf(f, "#!/bin/sh\n")
+				fmt.Fprintf(f, "echo 'v1.1.2'\n")
+				fmt.Fprintf(f, "echo 'v1.1.3'\n")
+				fmt.Fprintf(f, "echo 'v1.1.4'\n")
+
+				return nil
+			},
+			args: []string{
+				"-git", "/tmp/e2e001.sh",
+				"-prefix", "v",
+				"-owner", "owner01",
+				"-repo", "repo01",
+			},
 			expectedExitCode: 0,
 		},
 	}
@@ -39,12 +63,20 @@ func TestA(t *testing.T) {
 				tC.args...,
 			)
 
+			cmd.Env = append(
+				os.Environ(),
+				fmt.Sprintf("E2E_TEST_ID=%s", uuid.New()),
+				"GITHUB_HTTP_CLIENT_FAKE_SCHEME=http",
+				"GITHUB_HTTP_CLIENT_FAKE_HOST=localhost:8080",
+			)
+
 			stdout, stderr := bytes.NewBufferString(""), bytes.NewBufferString("")
 			cmd.Stdout = stdout
 			cmd.Stderr = stderr
 
-			fmt.Println("aho")
-			fmt.Println(filePathBin)
+			if err := tC.setup(); err != nil {
+				require.Error(t, err, err.Error())
+			}
 
 			err := cmd.Run()
 			var exiterr *exec.ExitError
