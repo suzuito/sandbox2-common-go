@@ -4,17 +4,15 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func TestMain(m *testing.M) {
-	m.Run()
-}
 
 func TestA(t *testing.T) {
 	filePathBin := os.Getenv("FILE_PATH_BIN")
@@ -45,10 +43,13 @@ func TestA(t *testing.T) {
 			cmd.Stdout = stdout
 			cmd.Stderr = stderr
 
+			fmt.Println("aho")
+			fmt.Println(filePathBin)
+
 			err := cmd.Run()
 			var exiterr *exec.ExitError
 			if !errors.As(err, &exiterr) {
-				require.NoError(t, err, err.Error())
+				require.NoError(t, err, fmt.Sprintf("%s %s: %s", filePathBin, strings.Join(tC.args, " "), err.Error()))
 			}
 
 			assert.Equal(t, tC.expectedExitCode, cmd.ProcessState.ExitCode())
