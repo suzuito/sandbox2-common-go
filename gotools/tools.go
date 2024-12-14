@@ -1,7 +1,7 @@
 package gotools
 
 import (
-	_ "github.com/air-verse/air"
-	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
-	_ "golang.org/x/pkgsite/cmd/pkgsite"
+	_ "github.com/air-verse/air/runner"
+	_ "github.com/golangci/golangci-lint/pkg/exitcodes"
+	_ "golang.org/x/pkgsite/static"
 )

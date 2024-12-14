@@ -2,6 +2,8 @@ BIN_AIR = $(shell go env GOPATH)/bin/air
 BIN_PKGSITE = $(shell go env GOPATH)/bin/pkgsite
 BIN_GOLANGCI_LINT = $(shell go env GOPATH)/bin/golangci-lint
 
+GO_SOURCES=$(shell find . -name "*.go")
+
 .PHONY: mac-init
 mac-init:
 
@@ -26,10 +28,24 @@ godoc: $(BIN_AIR) $(BIN_PKGSITE)
 test:
 	go test ./...
 
-.PHONY: build-increment-release-prd
-build-increment-release-prd:
-	mkdir -p dist/prd && go build -o dist/prd/increment-release-version tools/release/cmd/increment-release-version/*.go
+.PHONY: e2e
+e2e:
+	make e2e-increment-release-version
+
+.PHONY: start-e2e-environment
+start-e2e-environment:
+	# admin UI 8081
+	# fake server 8080
+	docker compose up -d smocker
+	sh wait-until-http-health.sh http://localhost:8081/version
+
+.PHONY: stop-e2e-environment
+stop-e2e-environment:
+	docker compose down -v smocker
 
 .PHONY: clean
 clean:
 	rm -fr dist/
+	rm -rf cov/
+
+include Makefile.tools.release.mk
