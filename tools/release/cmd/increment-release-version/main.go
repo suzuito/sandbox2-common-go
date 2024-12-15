@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	errordefcli "github.com/suzuito/sandbox2-common-go/errordefs/cli"
+	errordefcli "github.com/suzuito/sandbox2-common-go/libs/errordefs/cli"
 	"github.com/suzuito/sandbox2-common-go/tools/release/internal/inject"
 )
 

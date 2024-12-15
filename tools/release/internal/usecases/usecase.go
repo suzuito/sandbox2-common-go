@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/suzuito/sandbox2-common-go/terrors"
+	"github.com/suzuito/sandbox2-common-go/libs/terrors"
 	"github.com/suzuito/sandbox2-common-go/tools/release/internal/businesslogics"
 	"github.com/suzuito/sandbox2-common-go/tools/release/internal/domains"
 )

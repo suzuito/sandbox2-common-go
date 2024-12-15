@@ -13,5 +13,5 @@ e2e-release-increment-release-version:
 	export FILE_PATH_BIN=$(abspath tools/release/dist/e2e/increment-release-version) && \
 	export GOCOVERDIR=$(abspath tools/release/cov/e2e/increment-release-version) && \
 	mkdir -p $${GOCOVERDIR} && rm $${GOCOVERDIR}/* && \
-	go test -count=1 -v ./tools/release/e2e/increment-release-version/... || : && \
+	go test -count=1 -v ./tools/e2e/release/increment-release-version/... || : && \
 	sh report-e2e.sh $${GOCOVERDIR}

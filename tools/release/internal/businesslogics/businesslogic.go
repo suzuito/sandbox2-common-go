@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/suzuito/sandbox2-common-go/terrors"
+	"github.com/suzuito/sandbox2-common-go/libs/terrors"
 	"github.com/suzuito/sandbox2-common-go/tools/release/internal/domains"
 	"github.com/suzuito/sandbox2-common-go/tools/release/internal/gateways"
 	"github.com/suzuito/sandbox2-common-go/tools/release/internal/repositories"

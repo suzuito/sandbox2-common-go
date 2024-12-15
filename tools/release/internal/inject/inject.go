@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/go-github/v67/github"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/suzuito/sandbox2-common-go/terrors"
+	"github.com/suzuito/sandbox2-common-go/libs/terrors"
 	"github.com/suzuito/sandbox2-common-go/tools/release/internal/businesslogics"
 	"github.com/suzuito/sandbox2-common-go/tools/release/internal/infra/gh/repositories"
 	"github.com/suzuito/sandbox2-common-go/tools/release/internal/infra/local/gateways"
