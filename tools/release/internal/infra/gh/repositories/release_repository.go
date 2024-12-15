@@ -6,8 +6,8 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/google/go-github/v67/github"
+	"github.com/suzuito/sandbox2-common-go/libs/utils"
 	"github.com/suzuito/sandbox2-common-go/tools/release/internal/repositories"
-	"github.com/suzuito/sandbox2-common-go/utils"
 )
 
 type ReleaseRepository struct {

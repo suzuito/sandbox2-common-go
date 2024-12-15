@@ -26,7 +26,7 @@ godoc: $(BIN_AIR) $(BIN_PKGSITE)
 
 .PHONY: test
 test:
-	go test ./...
+	go test ./libs/... ./tools/...
 
 .PHONY: e2e
 e2e:
