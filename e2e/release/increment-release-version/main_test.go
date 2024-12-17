@@ -29,7 +29,7 @@ func TestA(t *testing.T) {
 	)
 
 	externalCommandFaker := e2ehelpers.ExternalCommandFaker{}
-	defer externalCommandFaker.Cleanup()
+	defer externalCommandFaker.Cleanup() //nolint:errcheck
 
 	testCases := []struct {
 		desc             string
