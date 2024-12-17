@@ -13,5 +13,5 @@ jobs:
   golint:
     uses: ./.github/workflows/_golint.yaml
   e2e:
-    uses: ./.github/workflows/e2e.yaml
+    uses: ./.github/workflows/_e2e.yaml
 
