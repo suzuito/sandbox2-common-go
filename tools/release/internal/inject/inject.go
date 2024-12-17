@@ -47,7 +47,7 @@ func NewUsecase(
 ) (usecases.Usecase, error) {
 	var env Environment
 	if err := envconfig.Process("", &env); err != nil {
-		return nil, terrors.Wrapf("failed to load environment variable: %w", err)
+		return nil, terrors.Errorf("failed to load environment variable: %w", err)
 	}
 
 	githubHTTPClient := http.DefaultClient

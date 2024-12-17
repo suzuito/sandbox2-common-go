@@ -18,6 +18,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/suzuito/sandbox2-common-go/libs/e2ehelpers"
 	"github.com/suzuito/sandbox2-common-go/libs/terrors"
 )
 
@@ -32,7 +33,7 @@ func (t *SmockerClient) PostMocks(
 ) error {
 	bodyBytes, err := json.Marshal(body)
 	if err != nil {
-		return terrors.Wrapf("failed to json.Marshal: %w", err)
+		return terrors.Errorf("failed to json.Marshal: %w", err)
 	}
 
 	reqURL, _ := url.Parse(t.baseURL.String())
@@ -43,14 +44,14 @@ func (t *SmockerClient) PostMocks(
 
 	req, err := http.NewRequest(http.MethodPost, reqURL.String(), bytes.NewReader(bodyBytes))
 	if err != nil {
-		return terrors.Wrapf("failed to http.NewRequest: %w", err)
+		return terrors.Errorf("failed to http.NewRequest: %w", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 
 	res, err := t.client.Do(req)
 	if err != nil {
-		return terrors.Wrapf("failed to http request: %w", err)
+		return terrors.Errorf("failed to http request: %w", err)
 	}
 	defer res.Body.Close()
 
@@ -59,7 +60,7 @@ func (t *SmockerClient) PostMocks(
 		if err != nil {
 			resBodyBytes = []byte{}
 		}
-		return terrors.Wrapf(
+		return terrors.Errorf(
 			"http error: status=%d body=%s",
 			res.StatusCode, string(resBodyBytes),
 		)
@@ -121,21 +122,50 @@ func TestA(t *testing.T) {
 		expectedStderr   string
 	}{
 		{
-			desc: "ok",
+			desc: "ok - increment patch (implicit -increment option)",
+			args: []string{
+				"-git", "/tmp/e2e001.sh",
+				"-prefix", "v",
+				"-owner", "owner01",
+				"-repo", "repo01",
+			},
+			expectedExitCode: 0,
+			expectedStdout: strings.Join(
+				[]string{
+					"created release draft v1.1.5",
+				},
+				"\n",
+			),
 			setup: func(testID uuid.UUID) error {
-				// external command
-				f, err := os.Create("/tmp/e2e001.sh")
+				fakeExternalCommand, err := e2ehelpers.NewFakeExternalCommand(
+					"/tmp/e2e001.sh",
+					0,
+					strings.Join([]string{
+						"v1.1.2",
+						"v1.1.3",
+						"v1.1.4",
+					}, "\n"),
+					"",
+				)
 				if err != nil {
-					return err
+					return fmt.Errorf("failed to new fake external command: %w", err)
 				}
-				defer f.Close()
+				defer fakeExternalCommand.Cleanup()
+				// external command
+				/*
+					f, err := os.Create("/tmp/e2e001.sh")
+					if err != nil {
+						return err
+					}
+					defer f.Close()
 
-				f.Chmod(0755)
+					f.Chmod(0755)
 
-				fmt.Fprintf(f, "#!/bin/sh\n")
-				fmt.Fprintf(f, "echo 'v1.1.2'\n")
-				fmt.Fprintf(f, "echo 'v1.1.3'\n")
-				fmt.Fprintf(f, "echo 'v1.1.4'\n")
+					fmt.Fprintf(f, "#!/bin/sh\n")
+					fmt.Fprintf(f, "echo 'v1.1.2'\n")
+					fmt.Fprintf(f, "echo 'v1.1.3'\n")
+					fmt.Fprintf(f, "echo 'v1.1.4'\n")
+				*/
 
 				// smocker mock
 				smockerURL, _ := url.Parse("http://localhost:8081")
@@ -180,13 +210,42 @@ func TestA(t *testing.T) {
 
 				return nil
 			},
+		},
+		{
+			desc: "ng - option -git required",
 			args: []string{
-				"-git", "/tmp/e2e001.sh",
 				"-prefix", "v",
 				"-owner", "owner01",
 				"-repo", "repo01",
 			},
-			expectedExitCode: 0,
+			expectedExitCode: 1,
+			expectedStderr: strings.Join([]string{
+				"-git is required",
+			}, "\n"),
+		},
+		{
+			desc: "ng - option -owner required",
+			args: []string{
+				"-git", "/tmp/e2e001.sh",
+				"-prefix", "v",
+				"-repo", "repo01",
+			},
+			expectedExitCode: 1,
+			expectedStderr: strings.Join([]string{
+				"-owner is required",
+			}, "\n"),
+		},
+		{
+			desc: "ng - option -repo required",
+			args: []string{
+				"-git", "/tmp/e2e001.sh",
+				"-prefix", "v",
+				"-owner", "owner01",
+			},
+			expectedExitCode: 1,
+			expectedStderr: strings.Join([]string{
+				"-repo is required",
+			}, "\n"),
 		},
 	}
 	for _, tC := range testCases {
@@ -212,8 +271,10 @@ func TestA(t *testing.T) {
 			cmd.Stdout = stdout
 			cmd.Stderr = stderr
 
-			if err := tC.setup(testID); err != nil {
-				require.Error(t, err, err.Error())
+			if tC.setup != nil {
+				if err := tC.setup(testID); err != nil {
+					require.Error(t, err, err.Error())
+				}
 			}
 
 			err := cmd.Run()

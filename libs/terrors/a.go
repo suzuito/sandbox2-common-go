@@ -24,7 +24,7 @@ func Wrap(err error) TraceableError {
 	return newTraceableErrorImpl(2, err)
 }
 
-func Wrapf(format string, a ...any) TraceableError {
+func Errorf(format string, a ...any) TraceableError {
 	return newTraceableErrorImpl(2, fmt.Errorf(format, a...))
 }
 

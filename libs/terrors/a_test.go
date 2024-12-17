@@ -34,7 +34,7 @@ func TestStackTrace(t *testing.T) {
 	assert.Regexp(t, ".+/a_test.go", traceInfos[1].Filename)
 	assert.Equal(t, 23, traceInfos[1].Line)
 
-	err5 := Wrapf("this is a test error: %w", err1)
+	err5 := Errorf("this is a test error: %w", err1)
 	assert.Equal(t, "this is a test error: err1", err5.Error())
 	assert.Equal(t, "err1", errors.Unwrap(errors.Unwrap(err5)).Error())
 }

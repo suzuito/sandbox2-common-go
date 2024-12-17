@@ -38,7 +38,7 @@ func (t *Impl) IncrementVersion(
 ) error {
 	latestVersion, err := t.versionFetcher.GetLatestVersion(ctx, prefix)
 	if err != nil {
-		return terrors.Wrapf("failed to GetLatestVersion: %w", err)
+		return terrors.Errorf("failed to GetLatestVersion: %w", err)
 	}
 
 	var nextVersion semver.Version
@@ -50,7 +50,7 @@ func (t *Impl) IncrementVersion(
 	case domains.IncrementTypePatch:
 		nextVersion = latestVersion.IncPatch()
 	default:
-		return terrors.Wrapf("invalid latest version: %s", latestVersion)
+		return terrors.Errorf("invalid latest version: %s", latestVersion)
 	}
 
 	if err := t.releaseRepository.CreateDraft(
@@ -61,7 +61,7 @@ func (t *Impl) IncrementVersion(
 		prefix,
 		&nextVersion,
 	); err != nil {
-		return terrors.Wrapf("failed to CreateDraft: %w", err)
+		return terrors.Errorf("failed to CreateDraft: %w", err)
 	}
 
 	return nil
