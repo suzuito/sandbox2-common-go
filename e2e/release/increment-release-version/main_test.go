@@ -3,120 +3,38 @@ package main
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
-	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/smocker-dev/smocker/server/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/suzuito/sandbox2-common-go/libs/e2ehelpers"
-	"github.com/suzuito/sandbox2-common-go/libs/terrors"
 )
-
-type SmockerClient struct {
-	baseURL *url.URL
-	client  *http.Client
-}
-
-func (t *SmockerClient) PostMocks(
-	body PostMocksRequest,
-	reset bool,
-) error {
-	bodyBytes, err := json.Marshal(body)
-	if err != nil {
-		return terrors.Errorf("failed to json.Marshal: %w", err)
-	}
-
-	reqURL, _ := url.Parse(t.baseURL.String())
-	reqURL.Path = "/mocks"
-	query := reqURL.Query()
-	query.Set("reset", strconv.FormatBool(reset))
-	reqURL.RawQuery = query.Encode()
-
-	req, err := http.NewRequest(http.MethodPost, reqURL.String(), bytes.NewReader(bodyBytes))
-	if err != nil {
-		return terrors.Errorf("failed to http.NewRequest: %w", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-
-	res, err := t.client.Do(req)
-	if err != nil {
-		return terrors.Errorf("failed to http request: %w", err)
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		resBodyBytes, err := io.ReadAll(res.Body)
-		if err != nil {
-			resBodyBytes = []byte{}
-		}
-		return terrors.Errorf(
-			"http error: status=%d body=%s",
-			res.StatusCode, string(resBodyBytes),
-		)
-	}
-
-	return nil
-}
-
-type PostMocksRequest []Mock
-
-type Mock struct {
-	Request  *MockRequest  `json:"request"`
-	Response *MockResponse `json:"response"`
-}
-
-type MockRequest struct {
-	Method  StringMatcher              `json:"method"`
-	Path    StringMatcher              `json:"path"`
-	Headers map[string][]StringMatcher `json:"headers"`
-}
-
-type MockResponse struct {
-	Status  int               `json:"status"`
-	Headers map[string]string `json:"headers"`
-	Body    string            `json:"string"`
-}
-
-type StringMatcher struct {
-	MatchOp MatchOp `json:"matcher"`
-	Value   string  `json:"value"`
-}
-
-type MatchOp string
-
-const (
-	MatchOpShouldEqual    MatchOp = "ShouldEqual"
-	MatchOpShouldNotEqual MatchOp = "ShouldNotEqual"
-)
-
-func NewSmockerClient(
-	baseURL *url.URL,
-	client *http.Client,
-) *SmockerClient {
-	return &SmockerClient{
-		baseURL: baseURL,
-		client:  client,
-	}
-}
 
 func TestA(t *testing.T) {
 	filePathBin := os.Getenv("FILE_PATH_BIN")
 
+	smockerURL, _ := url.Parse("http://localhost:8081")
+	smockerClient := e2ehelpers.NewSmockerClient(
+		smockerURL,
+		http.DefaultClient,
+	)
+
+	externalCommandFaker := e2ehelpers.ExternalCommandFaker{}
+	defer externalCommandFaker.Cleanup()
+
 	testCases := []struct {
 		desc             string
 		args             []string
-		setup            func(uuid.UUID) error
+		setup            func(*testing.T, uuid.UUID) error
 		expectedExitCode int
 		expectedStdout   string
 		expectedStderr   string
@@ -128,83 +46,272 @@ func TestA(t *testing.T) {
 				"-prefix", "v",
 				"-owner", "owner01",
 				"-repo", "repo01",
+				"-branch", "branch01",
+				"-token", "token01",
 			},
 			expectedExitCode: 0,
-			expectedStdout: strings.Join(
-				[]string{
-					"created release draft v1.1.5",
-				},
-				"\n",
+			expectedStdout: e2ehelpers.NewLines(
+				"created release draft v1.1.5",
 			),
-			setup: func(testID uuid.UUID) error {
-				fakeExternalCommand, err := e2ehelpers.NewFakeExternalCommand(
-					"/tmp/e2e001.sh",
-					0,
-					strings.Join([]string{
+			setup: func(t *testing.T, testID uuid.UUID) error {
+				_, err := externalCommandFaker.New(&e2ehelpers.NewFakeExternalCommandArg{
+					FilePath: "/tmp/e2e001.sh",
+					Stdout: e2ehelpers.NewLines(
 						"v1.1.2",
 						"v1.1.3",
+						"hoge", // no semver is skipped
 						"v1.1.4",
-					}, "\n"),
-					"",
-				)
+					),
+				})
 				if err != nil {
-					return fmt.Errorf("failed to new fake external command: %w", err)
+					return err
 				}
-				defer fakeExternalCommand.Cleanup()
-				// external command
-				/*
-					f, err := os.Create("/tmp/e2e001.sh")
-					if err != nil {
-						return err
-					}
-					defer f.Close()
 
-					f.Chmod(0755)
-
-					fmt.Fprintf(f, "#!/bin/sh\n")
-					fmt.Fprintf(f, "echo 'v1.1.2'\n")
-					fmt.Fprintf(f, "echo 'v1.1.3'\n")
-					fmt.Fprintf(f, "echo 'v1.1.4'\n")
-				*/
-
-				// smocker mock
-				smockerURL, _ := url.Parse("http://localhost:8081")
-				smockerClient := NewSmockerClient(
-					smockerURL,
-					http.DefaultClient,
-				)
 				if err := smockerClient.PostMocks(
-					[]Mock{
+					types.Mocks{
 						{
-							Request: &MockRequest{
-								Method: StringMatcher{
-									MatchOp: MatchOpShouldEqual,
+							Request: types.MockRequest{
+								Method: types.StringMatcher{
+									Matcher: "ShouldEqual",
 									Value:   "POST",
 								},
-								Path: StringMatcher{
-									MatchOp: MatchOpShouldEqual,
+								Path: types.StringMatcher{
+									Matcher: "ShouldEqual",
 									Value:   "/repos/owner01/repo01/releases",
 								},
-								Headers: map[string][]StringMatcher{
+								Headers: types.MultiMapMatcher{
 									"E2e-Testid": {
 										{
-											MatchOp: MatchOpShouldEqual,
+											Matcher: "ShouldEqual",
 											Value:   testID.String(),
 										},
 									},
 								},
 							},
-							Response: &MockResponse{
+							Response: &types.MockResponse{
 								Status: http.StatusCreated,
-								Headers: map[string]string{
-									"Content-Type": "application/json",
+								Headers: types.MapStringSlice{
+									"Content-Type": types.StringSlice{"application/json"},
 								},
 								Body: `{}`,
 							},
 						},
 					},
-					true,
+					false,
 				); err != nil {
+					return err
+				}
+
+				return nil
+			},
+		},
+		{
+			desc: "ok - increment major",
+			args: []string{
+				"-git", "/tmp/e2e002.sh",
+				"-prefix", "v",
+				"-owner", "owner01",
+				"-repo", "repo01",
+				"-branch", "branch01",
+				"-token", "token01",
+				"-increment", "major",
+			},
+			expectedExitCode: 0,
+			expectedStdout: e2ehelpers.NewLines(
+				"created release draft v2.0.0",
+			),
+			setup: func(t *testing.T, testID uuid.UUID) error {
+				_, err := externalCommandFaker.New(&e2ehelpers.NewFakeExternalCommandArg{
+					FilePath: "/tmp/e2e002.sh",
+					Stdout: e2ehelpers.NewLines(
+						"v1.1.2",
+						"v1.1.3",
+						"v1.1.4",
+					),
+				})
+				if err != nil {
+					return err
+				}
+
+				if err := smockerClient.PostMocks(
+					types.Mocks{
+						{
+							Request: types.MockRequest{
+								Method: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "POST",
+								},
+								Path: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "/repos/owner01/repo01/releases",
+								},
+								Headers: types.MultiMapMatcher{
+									"E2e-Testid": {
+										{
+											Matcher: "ShouldEqual",
+											Value:   testID.String(),
+										},
+									},
+								},
+							},
+							Response: &types.MockResponse{
+								Status: http.StatusCreated,
+								Headers: types.MapStringSlice{
+									"Content-Type": types.StringSlice{"application/json"},
+								},
+								Body: `{}`,
+							},
+						},
+					},
+					false,
+				); err != nil {
+					return err
+				}
+
+				return nil
+			},
+		},
+		{
+			desc: "ok - increment minor",
+			args: []string{
+				"-git", "/tmp/e2e003.sh",
+				"-prefix", "v",
+				"-owner", "owner01",
+				"-repo", "repo01",
+				"-branch", "branch01",
+				"-token", "token01",
+				"-increment", "minor",
+			},
+			expectedExitCode: 0,
+			expectedStdout: e2ehelpers.NewLines(
+				"created release draft v1.2.0",
+			),
+			setup: func(t *testing.T, testID uuid.UUID) error {
+				_, err := externalCommandFaker.New(&e2ehelpers.NewFakeExternalCommandArg{
+					FilePath: "/tmp/e2e003.sh",
+					Stdout: e2ehelpers.NewLines(
+						"v1.1.2",
+						"v1.1.3",
+						"v1.1.4",
+					),
+				})
+				if err != nil {
+					return err
+				}
+
+				if err := smockerClient.PostMocks(
+					types.Mocks{
+						{
+							Request: types.MockRequest{
+								Method: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "POST",
+								},
+								Path: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "/repos/owner01/repo01/releases",
+								},
+								Headers: types.MultiMapMatcher{
+									"E2e-Testid": {
+										{
+											Matcher: "ShouldEqual",
+											Value:   testID.String(),
+										},
+									},
+								},
+							},
+							Response: &types.MockResponse{
+								Status: http.StatusCreated,
+								Headers: types.MapStringSlice{
+									"Content-Type": types.StringSlice{"application/json"},
+								},
+								Body: `{}`,
+							},
+						},
+					},
+					false,
+				); err != nil {
+					return err
+				}
+
+				return nil
+			},
+		},
+		{
+			desc: "ng - no existing versions in git (missmatch prefix)",
+			args: []string{
+				"-git", "/tmp/e2e005.sh",
+				"-prefix", "v",
+				"-owner", "owner01",
+				"-repo", "repo01",
+				"-branch", "branch01",
+				"-token", "token01",
+			},
+			expectedExitCode: 2,
+			expectedStderr: e2ehelpers.NewLines(
+				"no existing git versions",
+			),
+			setup: func(t *testing.T, testID uuid.UUID) error {
+				_, err := externalCommandFaker.New(&e2ehelpers.NewFakeExternalCommandArg{
+					FilePath: "/tmp/e2e005.sh",
+					Stdout: e2ehelpers.NewLines(
+						"1.1.2",
+						"1.1.3",
+						"1.1.4",
+					),
+				})
+				if err != nil {
+					return err
+				}
+
+				return nil
+			},
+		},
+		{
+			desc: "ng - no existing versions in git",
+			args: []string{
+				"-git", "/tmp/e2e006.sh",
+				"-prefix", "v",
+				"-owner", "owner01",
+				"-repo", "repo01",
+				"-branch", "branch01",
+				"-token", "token01",
+			},
+			expectedExitCode: 2,
+			expectedStderr: e2ehelpers.NewLines(
+				"no existing git versions",
+			),
+			setup: func(t *testing.T, testID uuid.UUID) error {
+				_, err := externalCommandFaker.New(&e2ehelpers.NewFakeExternalCommandArg{
+					FilePath: "/tmp/e2e006.sh",
+				})
+				if err != nil {
+					return err
+				}
+
+				return nil
+			},
+		},
+		{
+			desc: "ng - git command is failed",
+			args: []string{
+				"-git", "/tmp/e2e007.sh",
+				"-prefix", "v",
+				"-owner", "owner01",
+				"-repo", "repo01",
+				"-branch", "branch01",
+				"-token", "token01",
+			},
+			expectedExitCode: 3,
+			expectedStderr: e2ehelpers.NewLines(
+				"failed to git command with code 127",
+			),
+			setup: func(t *testing.T, testID uuid.UUID) error {
+				_, err := externalCommandFaker.New(&e2ehelpers.NewFakeExternalCommandArg{
+					FilePath: "/tmp/e2e007.sh",
+					ExitCode: 127,
+				})
+				if err != nil {
 					return err
 				}
 
@@ -219,9 +326,9 @@ func TestA(t *testing.T) {
 				"-repo", "repo01",
 			},
 			expectedExitCode: 1,
-			expectedStderr: strings.Join([]string{
+			expectedStderr: e2ehelpers.NewLines(
 				"-git is required",
-			}, "\n"),
+			),
 		},
 		{
 			desc: "ng - option -owner required",
@@ -229,11 +336,13 @@ func TestA(t *testing.T) {
 				"-git", "/tmp/e2e001.sh",
 				"-prefix", "v",
 				"-repo", "repo01",
+				"-branch", "branch01",
+				"-token", "token01",
 			},
 			expectedExitCode: 1,
-			expectedStderr: strings.Join([]string{
+			expectedStderr: e2ehelpers.NewLines(
 				"-owner is required",
-			}, "\n"),
+			),
 		},
 		{
 			desc: "ng - option -repo required",
@@ -241,11 +350,56 @@ func TestA(t *testing.T) {
 				"-git", "/tmp/e2e001.sh",
 				"-prefix", "v",
 				"-owner", "owner01",
+				"-branch", "branch01",
+				"-token", "token01",
 			},
 			expectedExitCode: 1,
-			expectedStderr: strings.Join([]string{
+			expectedStderr: e2ehelpers.NewLines(
 				"-repo is required",
-			}, "\n"),
+			),
+		},
+		{
+			desc: "ng - option -branch required",
+			args: []string{
+				"-git", "/tmp/e2e001.sh",
+				"-prefix", "v",
+				"-repo", "repo01",
+				"-owner", "owner01",
+				"-token", "token01",
+			},
+			expectedExitCode: 1,
+			expectedStderr: e2ehelpers.NewLines(
+				"-branch is required",
+			),
+		},
+		{
+			desc: "ng - option -token required",
+			args: []string{
+				"-git", "/tmp/e2e001.sh",
+				"-prefix", "v",
+				"-repo", "repo01",
+				"-owner", "owner01",
+				"-branch", "branch01",
+			},
+			expectedExitCode: 1,
+			expectedStderr: e2ehelpers.NewLines(
+				"-token is required",
+			),
+		},
+		{
+			desc: "ng - unknown -increment-type",
+			args: []string{
+				"-git", "/tmp/e2e001.sh",
+				"-increment", "x",
+				"-owner", "owner01",
+				"-repo", "repo01",
+				"-branch", "branch01",
+				"-token", "token01",
+			},
+			expectedExitCode: 1,
+			expectedStderr: e2ehelpers.NewLines(
+				"invalid increment type 'x'",
+			),
 		},
 	}
 	for _, tC := range testCases {
@@ -272,7 +426,7 @@ func TestA(t *testing.T) {
 			cmd.Stderr = stderr
 
 			if tC.setup != nil {
-				if err := tC.setup(testID); err != nil {
+				if err := tC.setup(t, testID); err != nil {
 					require.Error(t, err, err.Error())
 				}
 			}

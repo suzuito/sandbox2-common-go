@@ -30,7 +30,7 @@ test:
 
 .PHONY: e2e
 e2e:
-	make e2e-increment-release-version
+	make e2e-release-increment-release-version
 
 .PHONY: start-e2e-environment
 start-e2e-environment:

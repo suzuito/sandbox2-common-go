@@ -1,6 +1,9 @@
 package errordefcli
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 type CLIError struct {
 	exitCode int
@@ -13,6 +16,20 @@ func (t *CLIError) Error() string {
 
 func (t *CLIError) ExitCode() int {
 	return t.exitCode
+}
+
+func NewCLIError(exitCode int, message string) *CLIError {
+	return &CLIError{
+		exitCode: exitCode,
+		message:  message,
+	}
+}
+
+func NewCLIErrorf(exitCode int, message string, args ...any) *CLIError {
+	return &CLIError{
+		exitCode: exitCode,
+		message:  fmt.Sprintf(message, args...),
+	}
 }
 
 func AsCLIError(err error) (*CLIError, bool) {

@@ -3,6 +3,7 @@ package usecases
 import (
 	"context"
 
+	errordefcli "github.com/suzuito/sandbox2-common-go/libs/errordefs/cli"
 	"github.com/suzuito/sandbox2-common-go/libs/terrors"
 	"github.com/suzuito/sandbox2-common-go/tools/release/internal/businesslogics"
 	"github.com/suzuito/sandbox2-common-go/tools/release/internal/domains"
@@ -33,7 +34,11 @@ func (t *Impl) IncrementVersion(
 ) error {
 	incrementType := domains.IncrementType(incrementTypeString)
 	if err := incrementType.Validate(); err != nil {
-		return terrors.Errorf("invalid increment type '%s'", incrementType)
+		return errordefcli.NewCLIErrorf(
+			1,
+			"invalid increment type '%s'",
+			incrementType,
+		)
 	}
 
 	if err := t.businessLogic.IncrementVersion(

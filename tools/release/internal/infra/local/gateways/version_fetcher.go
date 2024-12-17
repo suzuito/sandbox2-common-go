@@ -40,7 +40,10 @@ func (t *VersionFetcher) GetLatestVersion(ctx context.Context, prefix string) (*
 
 	versions := make([]*semver.Version, 0)
 	for _, line := range cmdResultLines {
-		versionString, _ := strings.CutPrefix(line, prefix)
+		versionString, found := strings.CutPrefix(line, prefix)
+		if !found {
+			continue
+		}
 
 		version, err := semver.StrictNewVersion(versionString)
 		if err != nil {
@@ -51,7 +54,10 @@ func (t *VersionFetcher) GetLatestVersion(ctx context.Context, prefix string) (*
 	}
 
 	if len(versions) <= 0 {
-		return nil, fmt.Errorf("version string does not exist in git tags")
+		return nil, fmt.Errorf(
+			"version string does not exist in git tags: %w",
+			gateways.ErrNoVersionExists,
+		)
 	}
 
 	sort.Sort(semver.Collection(versions))

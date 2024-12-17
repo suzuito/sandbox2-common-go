@@ -82,6 +82,22 @@ func main() {
 		fmt.Fprintf(os.Stderr, "-git is required\n")
 		os.Exit(1)
 	}
+	if githubOwner == "" {
+		fmt.Fprintf(os.Stderr, "-owner is required\n")
+		os.Exit(1)
+	}
+	if githubRepo == "" {
+		fmt.Fprintf(os.Stderr, "-repo is required\n")
+		os.Exit(1)
+	}
+	if branch == "" {
+		fmt.Fprintf(os.Stderr, "-branch is required\n")
+		os.Exit(1)
+	}
+	if githubAppToken == "" {
+		fmt.Fprintf(os.Stderr, "-token is required\n")
+		os.Exit(1)
+	}
 
 	uc, err := inject.NewUsecase(
 		filePathGit,
