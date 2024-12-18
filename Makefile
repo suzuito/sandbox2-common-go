@@ -51,6 +51,14 @@ start-e2e-environment:
 stop-e2e-environment:
 	docker compose down -v smocker
 
+.PHONY: test-local
+test-local:
+	make test e2e merge-test-report && sh fail-if-coverage-unsatisfied.sh 80
+
+.PHONY: test-ci
+test-ci:
+	make test e2e merge-test-report
+
 .PHONY: clean
 clean:
 	rm -fr dist/

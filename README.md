@@ -5,5 +5,5 @@
 ## test
 
 ```bash
-make test e2e merge-test-report && sh fail-if-coverage-unsatisfied.sh 80
+make test-local
 ```
