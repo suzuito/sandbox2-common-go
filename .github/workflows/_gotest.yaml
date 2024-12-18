@@ -14,3 +14,5 @@ jobs:
       - run: make test
       - run: make e2e
       - run: make merge-test-report
+      - name: check coverage
+        run: sh fail-if-coverage-unsatisfied.sh 80
