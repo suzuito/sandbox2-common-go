@@ -11,4 +11,11 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - run: make test
+      - run: make test-ci
+      - run: mkdir ga_artifacts && cp gocov.html ga_artifacts/ && cp gocovfunc.txt ga_artifacts/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage-report
+          path: ga_artifacts
+      - name: check coverage
+        run: sh fail-if-coverage-unsatisfied.sh 80

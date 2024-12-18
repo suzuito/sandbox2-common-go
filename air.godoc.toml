@@ -1,5 +1,5 @@
 [build]
-full_bin = "$(go env GOPATH)/bin/godoc"
+full_bin = "$(go env GOPATH)/bin/pkgsite"
 args_bin = [
     "-http=':6060'"
 ]

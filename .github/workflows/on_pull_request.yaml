@@ -1,0 +1,9 @@
+name: on_pull_request
+on:
+  pull_request:
+
+jobs:
+  gotest:
+    uses: ./.github/workflows/_gotest.yaml
+  golint:
+    uses: ./.github/workflows/_golint.yaml

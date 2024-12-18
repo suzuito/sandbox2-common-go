@@ -1,27 +1,67 @@
 BIN_AIR = $(shell go env GOPATH)/bin/air
-BIN_GODOC = $(shell go env GOPATH)/bin/godoc
+BIN_PKGSITE = $(shell go env GOPATH)/bin/pkgsite
 BIN_GOLANGCI_LINT = $(shell go env GOPATH)/bin/golangci-lint
+
+GO_SOURCES=$(shell find . -name "*.go")
 
 .PHONY: mac-init
 mac-init:
 
-$(BIN_GOLANGCI_LINT):
+$(BIN_GOLANGCI_LINT): Makefile
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.62.2
 
 $(BIN_AIR):
-	go install github.com/air-verse/air@v1.61.1
+	go install github.com/air-verse/air
 
-$(BIN_GODOC):
-	go install golang.org/x/tools/cmd/godoc@v0.28.0
+$(BIN_PKGSITE):
+	go install golang.org/x/pkgsite/cmd/pkgsite
 
 .PHONY: lint
 lint: $(BIN_GOLANGCI_LINT)
 	$(BIN_GOLANGCI_LINT) run ./...
 
 .PHONY: godoc
-godoc: $(BIN_AIR) $(BIN_GODOC)
+godoc: $(BIN_AIR) $(BIN_PKGSITE)
 	$(BIN_AIR) -c air.godoc.toml
 
 .PHONY: test
 test:
-	go test ./...
+	mkdir -p cov/ && rm -f cov/*
+	go test -cover ./libs/... ./tools/... -args -test.gocoverdir=$(abspath cov)
+	sh report-gocovdir.sh cov
+
+.PHONY: e2e
+e2e:
+	make e2e-release-increment-release-version
+
+.PHONY: test
+merge-test-report:
+	go tool covdata percent -i=cov,tools/release/cov/e2e/increment-release-version -o=textfmt.txt
+	go tool cover -html=textfmt.txt -o=gocov.html
+	go tool cover -func=textfmt.txt -o=gocovfunc.txt
+
+.PHONY: start-e2e-environment
+start-e2e-environment:
+	# admin UI 8081
+	# fake server 8080
+	docker compose up -d smocker
+	sh wait-until-http-health.sh http://localhost:8081/version
+
+.PHONY: stop-e2e-environment
+stop-e2e-environment:
+	docker compose down -v smocker
+
+.PHONY: test-local
+test-local:
+	make test e2e merge-test-report && sh fail-if-coverage-unsatisfied.sh 80
+
+.PHONY: test-ci
+test-ci:
+	make test e2e merge-test-report
+
+.PHONY: clean
+clean:
+	rm -fr dist/
+	rm -rf cov/
+
+include Makefile.tools.release.mk

@@ -1,0 +1,6 @@
+services:
+  smocker:
+    image: ghcr.io/smocker-dev/smocker
+    ports:
+      - 8080:8080
+      - 8081:8081
