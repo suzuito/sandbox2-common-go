@@ -12,7 +12,7 @@ import (
 
 func Test_ExternalCommandFaker_Add_cannot_dup_filepath(t *testing.T) {
 	f := e2ehelpers.ExternalCommandFaker{}
-	defer f.Cleanup()
+	defer require.NoError(t, f.Cleanup())
 
 	require.NoError(t, f.Add(&e2ehelpers.ExternalCommandBehavior{
 		FilePath: "/tmp/hoge001",
@@ -75,7 +75,7 @@ func Test_ExternalCommandFaker(t *testing.T) {
 	for _, tC := range testCases {
 		t.Run(tC.desc, func(t *testing.T) {
 			f := e2ehelpers.ExternalCommandFaker{}
-			defer f.Cleanup()
+			defer require.NoError(t, f.Cleanup())
 
 			require.NoError(t, f.Add(&tC.input))
 
