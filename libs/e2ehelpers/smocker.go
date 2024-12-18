@@ -12,11 +12,17 @@ import (
 	"github.com/smocker-dev/smocker/server/types"
 )
 
+// SmockerClient is client for [smocker].
+//
+// [smocker]: https://smocker.dev/
 type SmockerClient struct {
 	baseURL *url.URL
 	client  *http.Client
 }
 
+// PostMocks requests to [add mocks endpoint].
+//
+// [add mocks endpoint]: https://smocker.dev/docs/technical-documentation/api#add-mocks
 func (t *SmockerClient) PostMocks(
 	body types.Mocks,
 	reset bool,
@@ -59,6 +65,7 @@ func (t *SmockerClient) PostMocks(
 	return nil
 }
 
+// NewSmockerClient returns a new [SmockerClient] given base URL of hosted smocker, http client.
 func NewSmockerClient(
 	baseURL *url.URL,
 	client *http.Client,

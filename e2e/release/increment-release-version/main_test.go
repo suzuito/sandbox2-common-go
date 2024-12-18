@@ -54,7 +54,7 @@ func TestA(t *testing.T) {
 				"created release draft v1.1.5",
 			),
 			setup: func(t *testing.T, testID uuid.UUID) error {
-				_, err := externalCommandFaker.New(&e2ehelpers.NewFakeExternalCommandArg{
+				err := externalCommandFaker.Add(&e2ehelpers.ExternalCommandBehavior{
 					FilePath: "/tmp/e2e001.sh",
 					Stdout: e2ehelpers.NewLines(
 						"v1.1.2",
@@ -121,7 +121,7 @@ func TestA(t *testing.T) {
 				"created release draft v2.0.0",
 			),
 			setup: func(t *testing.T, testID uuid.UUID) error {
-				_, err := externalCommandFaker.New(&e2ehelpers.NewFakeExternalCommandArg{
+				err := externalCommandFaker.Add(&e2ehelpers.ExternalCommandBehavior{
 					FilePath: "/tmp/e2e002.sh",
 					Stdout: e2ehelpers.NewLines(
 						"v1.1.2",
@@ -187,7 +187,7 @@ func TestA(t *testing.T) {
 				"created release draft v1.2.0",
 			),
 			setup: func(t *testing.T, testID uuid.UUID) error {
-				_, err := externalCommandFaker.New(&e2ehelpers.NewFakeExternalCommandArg{
+				err := externalCommandFaker.Add(&e2ehelpers.ExternalCommandBehavior{
 					FilePath: "/tmp/e2e003.sh",
 					Stdout: e2ehelpers.NewLines(
 						"v1.1.2",
@@ -252,7 +252,7 @@ func TestA(t *testing.T) {
 				"no existing git versions",
 			),
 			setup: func(t *testing.T, testID uuid.UUID) error {
-				_, err := externalCommandFaker.New(&e2ehelpers.NewFakeExternalCommandArg{
+				err := externalCommandFaker.Add(&e2ehelpers.ExternalCommandBehavior{
 					FilePath: "/tmp/e2e005.sh",
 					Stdout: e2ehelpers.NewLines(
 						"1.1.2",
@@ -282,7 +282,7 @@ func TestA(t *testing.T) {
 				"no existing git versions",
 			),
 			setup: func(t *testing.T, testID uuid.UUID) error {
-				_, err := externalCommandFaker.New(&e2ehelpers.NewFakeExternalCommandArg{
+				err := externalCommandFaker.Add(&e2ehelpers.ExternalCommandBehavior{
 					FilePath: "/tmp/e2e006.sh",
 				})
 				if err != nil {
@@ -307,7 +307,7 @@ func TestA(t *testing.T) {
 				"failed to git command with code 127",
 			),
 			setup: func(t *testing.T, testID uuid.UUID) error {
-				_, err := externalCommandFaker.New(&e2ehelpers.NewFakeExternalCommandArg{
+				err := externalCommandFaker.Add(&e2ehelpers.ExternalCommandBehavior{
 					FilePath: "/tmp/e2e007.sh",
 					ExitCode: 127,
 				})

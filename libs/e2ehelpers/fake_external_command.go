@@ -25,26 +25,18 @@ exit {{.ExitCode}}
 
 `))
 
-type FakeExternalCommand struct {
+// FileExternalCommand is a object having a location of fake command file.
+type fakeExternalCommand struct {
 	filePath string
 }
 
-func (t *FakeExternalCommand) FilePath() string {
-	return t.filePath
-}
-
-func (t *FakeExternalCommand) Cleanup() error {
+// Cleanup deletes fake command file
+func (t *fakeExternalCommand) Cleanup() error {
 	return os.Remove(t.filePath)
 }
 
-type NewFakeExternalCommandArg struct {
-	FilePath string
-	ExitCode int
-	Stdout   string
-	Stderr   string
-}
-
-func NewFakeExternalCommand(arg *NewFakeExternalCommandArg) (*FakeExternalCommand, error) {
+// newFakeExternalCommand returns new [fakeExternalCommand].
+func newFakeExternalCommand(arg *ExternalCommandBehavior) (*fakeExternalCommand, error) {
 	f, err := os.Create(arg.FilePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp file: %w", err)
@@ -59,13 +51,20 @@ func NewFakeExternalCommand(arg *NewFakeExternalCommandArg) (*FakeExternalComman
 		return nil, fmt.Errorf("failed to template: %w", err)
 	}
 
-	return &FakeExternalCommand{
+	return &fakeExternalCommand{
 		filePath: f.Name(),
 	}, nil
 }
 
+type ExternalCommandBehavior struct {
+	FilePath string
+	ExitCode int
+	Stdout   string
+	Stderr   string
+}
+
 type ExternalCommandFaker struct {
-	commands []*FakeExternalCommand
+	commands []*fakeExternalCommand
 }
 
 func (t *ExternalCommandFaker) Cleanup() error {
@@ -74,16 +73,24 @@ func (t *ExternalCommandFaker) Cleanup() error {
 		err = errors.Join(c.Cleanup())
 	}
 
+	t.commands = []*fakeExternalCommand{}
+
 	return err
 }
 
-func (t *ExternalCommandFaker) New(arg *NewFakeExternalCommandArg) (*FakeExternalCommand, error) {
-	cmd, err := NewFakeExternalCommand(arg)
+func (t *ExternalCommandFaker) Add(arg *ExternalCommandBehavior) error {
+	cmd, err := newFakeExternalCommand(arg)
 	if err != nil {
-		return nil, err
+		return err
+	}
+
+	for _, command := range t.commands {
+		if command.filePath == arg.FilePath {
+			return fmt.Errorf("fake command already exists: %s", arg.FilePath)
+		}
 	}
 
 	t.commands = append(t.commands, cmd)
 
-	return cmd, nil
+	return nil
 }
