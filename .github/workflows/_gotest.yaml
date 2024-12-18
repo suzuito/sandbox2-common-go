@@ -16,11 +16,11 @@ jobs:
       - run: make merge-test-report
       - uses: actions/upload-artifact@v4
         with:
-          name: code-coverage-report
+          name: code-coverage-report-html
           path: gocov.html
       - uses: actions/upload-artifact@v4
         with:
-          name: code-coverage-report
+          name: code-coverage-report-functxt
           path: gocovfunc.txt
       - name: check coverage
         run: sh fail-if-coverage-unsatisfied.sh 80
