@@ -2,6 +2,8 @@
 
 T=$1
 
+cat gocovfunc.txt
+
 COV=$(tail -1 gocovfunc.txt | awk '{print $3}' | sed 's/.$//g')
 
 R=$(echo "${COV} < ${T}" | bc)
