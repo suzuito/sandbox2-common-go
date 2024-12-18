@@ -7,8 +7,8 @@ GO_SOURCES=$(shell find . -name "*.go")
 .PHONY: mac-init
 mac-init:
 
-$(BIN_GOLANGCI_LINT):
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint
+$(BIN_GOLANGCI_LINT): Makefile
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.62.2
 
 $(BIN_AIR):
 	go install github.com/air-verse/air
