@@ -26,11 +26,19 @@ godoc: $(BIN_AIR) $(BIN_PKGSITE)
 
 .PHONY: test
 test:
-	go test ./libs/... ./tools/...
+	mkdir -p cov/ && rm -f cov/*
+	go test -cover ./libs/... ./tools/... -args -test.gocoverdir=$(abspath cov)
+	sh report-gocovdir.sh cov
 
 .PHONY: e2e
 e2e:
 	make e2e-release-increment-release-version
+
+.PHONY: test
+merge-test-report:
+	go tool covdata percent -i=cov,tools/release/cov/e2e/increment-release-version -o=textfmt.txt
+	go tool cover -html=textfmt.txt -o=gocov.html
+	go tool cover -func=textfmt.txt -o=gocovfunc.txt
 
 .PHONY: start-e2e-environment
 start-e2e-environment:

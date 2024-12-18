@@ -1,6 +1,11 @@
 tmp/
-dist/
 .bin/
-cov/
 playground/
 .DS_Store
+
+dist/
+
+cov/
+textfmt.txt
+gocov.html
+gocovfunc.txt
