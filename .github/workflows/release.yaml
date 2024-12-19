@@ -19,6 +19,7 @@ jobs:
       - run: git tags
       - run: go install github.com/suzuito/sandbox2-common-go/tools/release/cmd/increment-release-version@latest
       - run: echo $PATH
+      - run: increment-release-version -h
       - run: $(go env GOPATH)/bin/increment-release-version
       - run: bash create-release-draft.sh ${{ inputs.version }} ${{ github.ref }}
         env:
