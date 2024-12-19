@@ -18,6 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          fetch-depth: 0 # fetch all history for all branches and tags
           fetch-tags: true
       - uses: actions/setup-go@v5
         with:
