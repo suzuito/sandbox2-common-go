@@ -9,7 +9,6 @@ on:
         options:
           - patch
           - minor
-          - major
 
 jobs:
   release-prd:
