@@ -16,6 +16,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+      - run: git tags
       - run: go install github.com/suzuito/sandbox2-common-go/tools/release/cmd/increment-release-version@latest
       - run: echo $PATH
       - run: $(go env GOPATH)/bin/increment-release-version
