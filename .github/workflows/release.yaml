@@ -26,4 +26,4 @@ jobs:
       - run: go install github.com/suzuito/sandbox2-common-go/tools/release/cmd/increment-release-version@v0.0.1
       - run: echo $PATH
       - run: which git
-      - run: increment-release-version -increment ${{ inputs.increment }} -branch ${{ github.ref }} -prefix v -git /bin/git -owner suzuito -repo sandbox2-common-go -token ${{ github.token }}
+      - run: increment-release-version -increment ${{ inputs.increment }} -branch ${{ github.ref }} -prefix v -git /usr/bin/git -owner suzuito -repo sandbox2-common-go -token ${{ github.token }}
