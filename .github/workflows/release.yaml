@@ -2,10 +2,14 @@ name: release-prd
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: "version"
+      increment:
+        description: "increment"
         required: true
-        type: string
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
 
 jobs:
   release-prd:
@@ -21,8 +25,5 @@ jobs:
       - run: git tag -l
       - run: go install github.com/suzuito/sandbox2-common-go/tools/release/cmd/increment-release-version@latest
       - run: echo $PATH
-      - run: increment-release-version -h
-      - run: $(go env GOPATH)/bin/increment-release-version
-      - run: bash create-release-draft.sh ${{ inputs.version }} ${{ github.ref }}
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - run: which git
+      - run: increment-release-version -increment ${{ inputs.increment }} -branch ${{ github.ref }} -prefix v -git /bin/git -owner suzuito -repo sandbox2-common-go -token ${{ github.token }}
