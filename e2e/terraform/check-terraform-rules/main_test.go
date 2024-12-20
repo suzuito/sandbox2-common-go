@@ -1,13 +1,24 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"testing"
+
+	"github.com/suzuito/sandbox2-common-go/libs/e2ehelpers"
 )
 
-func TestA(t *testing.T) {
+func TestXxx(t *testing.T) {
 	filePathBin := os.Getenv("FILE_PATH_BIN")
 
-	fmt.Println(filePathBin)
+	testCases := []e2ehelpers.CLITestCase{
+		{
+			Args: []string{
+				"-d", "./testdata/success001",
+			},
+			ExpectedExitCode: 0,
+		},
+	}
+	for _, tC := range testCases {
+		tC.Run(t, filePathBin)
+	}
 }
