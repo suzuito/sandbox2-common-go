@@ -10,7 +10,7 @@ import (
 	"github.com/suzuito/sandbox2-common-go/libs/e2ehelpers"
 )
 
-func TestXxx(t *testing.T) {
+func TestCheckTerraformRules(t *testing.T) {
 	filePathBin := os.Getenv("FILE_PATH_BIN")
 
 	dirPathTestdata, err := filepath.Abs("testdata")
