@@ -2,7 +2,9 @@ package usecases
 
 import (
 	"context"
+	"errors"
 	"io/fs"
+	"os"
 	"path/filepath"
 
 	errordefcli "github.com/suzuito/sandbox2-common-go/libs/errordefs/cli"
@@ -51,12 +53,20 @@ func (t *impl) CheckTerraformRules(
 
 		return nil
 	}); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return errordefcli.NewCLIErrorf(
+				10,
+				"%s does not exist",
+				dirPathBase,
+			)
+		}
+
 		return err
 	}
 
 	if result, err := t.businessLogic.CheckRules(ctx, dirPathBase, modules, rules); err != nil {
 		return terrors.Errorf("failed to check rules: %w", err)
-	} else if result {
+	} else if !result {
 		return errordefcli.NewCLIError(5, "not pass")
 	}
 

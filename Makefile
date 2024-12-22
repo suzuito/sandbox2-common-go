@@ -37,7 +37,7 @@ e2e:
 
 .PHONY: test
 merge-test-report:
-	go tool covdata percent -i=cov,tools/release/cov/e2e/increment-release-version -o=textfmt.txt
+	go tool covdata percent -i=cov,tools/release/cov/e2e/increment-release-version,tools/terraform/cov/e2e/check-terraform-rules -o=textfmt.txt
 	go tool cover -html=textfmt.txt -o=gocov.html
 	go tool cover -func=textfmt.txt -o=gocovfunc.txt
 

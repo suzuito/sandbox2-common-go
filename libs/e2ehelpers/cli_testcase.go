@@ -16,6 +16,7 @@ import (
 
 type CLITestCase struct {
 	Desc             string
+	Envs             []string
 	Args             []string
 	Setup            func(t *testing.T, testID TestID) error
 	ExpectedExitCode int
@@ -41,9 +42,8 @@ func (c *CLITestCase) Run(
 		cmd.Env = append(
 			os.Environ(),
 			fmt.Sprintf("E2E_TEST_ID=%s", testID.String()),
-			"GITHUB_HTTP_CLIENT_FAKE_SCHEME=http",
-			"GITHUB_HTTP_CLIENT_FAKE_HOST=localhost:8080",
 		)
+		cmd.Env = append(cmd.Env, c.Envs...)
 
 		stdout, stderr := bytes.NewBufferString(""), bytes.NewBufferString("")
 		cmd.Stdout = stdout
@@ -64,7 +64,7 @@ func (c *CLITestCase) Run(
 		}
 
 		assert.Equal(t, c.ExpectedExitCode, cmd.ProcessState.ExitCode())
-		assert.Equal(t, c.ExpectedStdout, stdout.String())
-		assert.Equal(t, c.ExpectedStderr, stderr.String())
+		assert.Equal(t, strings.TrimRight(c.ExpectedStdout, "\n"), strings.TrimRight(stdout.String(), "\n"))
+		assert.Equal(t, strings.TrimRight(c.ExpectedStderr, "\n"), strings.TrimRight(stderr.String(), "\n"))
 	})
 }

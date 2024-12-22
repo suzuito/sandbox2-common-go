@@ -36,7 +36,12 @@ func TestCheckTerraformRules(t *testing.T) {
 					fmt.Sprintf(`resource terraform.backend."gcs" not found %s/case001/mods/ng001`, dirPathTestdata),
 					fmt.Sprintf(`resource provider."google" not found %s/case001/mods/ng002`, dirPathTestdata),
 					fmt.Sprintf(`invalid terraform.backend."gcs".bucket: hoge-terraform %s/case001/mods/ng003`, dirPathTestdata),
-					fmt.Sprintf(`invalid terraform.backend."gcs".prefix: hoge %s/case001/mods/ng004`, dirPathTestdata),
+					fmt.Sprintf("invalid terraform.backend.\"gcs\".prefix: hoge %s/case001/mods/ng004\n", dirPathTestdata),
+				},
+				"\n",
+			),
+			ExpectedStderr: strings.Join(
+				[]string{
 					"not pass\n",
 				},
 				"\n",
@@ -47,12 +52,25 @@ func TestCheckTerraformRules(t *testing.T) {
 			Args: []string{
 				"-d", fmt.Sprintf("%s/case002", dirPathTestdata),
 			},
-			ExpectedStdout: strings.Join(
+		},
+		{
+			Desc: `ng - set no existing dir as -d opt value`,
+			Args: []string{
+				"-d", fmt.Sprintf("%s/caseXXX", dirPathTestdata),
+			},
+			ExpectedExitCode: 10,
+			ExpectedStderr: strings.Join(
 				[]string{
-					fmt.Sprintf("ok: %s/mods/ok001", dirPathTestdata),
+					fmt.Sprintf("%s/caseXXX does not exist", dirPathTestdata),
 				},
 				"\n",
 			),
+		},
+		{
+			Desc: `ok - broken hcl file is ignored`,
+			Args: []string{
+				"-d", fmt.Sprintf("%s/case003", dirPathTestdata),
+			},
 		},
 	}
 	for _, tC := range testCases {

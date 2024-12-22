@@ -22,9 +22,15 @@ func TestA(t *testing.T) {
 	externalCommandFaker := e2ehelpers.ExternalCommandFaker{}
 	defer externalCommandFaker.Cleanup() //nolint:errcheck
 
+	envs := []string{
+		"GITHUB_HTTP_CLIENT_FAKE_SCHEME=http",
+		"GITHUB_HTTP_CLIENT_FAKE_HOST=localhost:8080",
+	}
+
 	testCases := []e2ehelpers.CLITestCase{
 		{
 			Desc: "ok - increment patch (implicit -increment option)",
+			Envs: envs,
 			Args: []string{
 				"-git", "/tmp/e2e001.sh",
 				"-prefix", "v",
@@ -91,6 +97,7 @@ func TestA(t *testing.T) {
 		},
 		{
 			Desc: "ok - increment major",
+			Envs: envs,
 			Args: []string{
 				"-git", "/tmp/e2e002.sh",
 				"-prefix", "v",
@@ -157,6 +164,7 @@ func TestA(t *testing.T) {
 		},
 		{
 			Desc: "ok - increment minor",
+			Envs: envs,
 			Args: []string{
 				"-git", "/tmp/e2e003.sh",
 				"-prefix", "v",
@@ -223,6 +231,7 @@ func TestA(t *testing.T) {
 		},
 		{
 			Desc: "ng - no existing versions in git (missmatch prefix)",
+			Envs: envs,
 			Args: []string{
 				"-git", "/tmp/e2e005.sh",
 				"-prefix", "v",
@@ -278,6 +287,7 @@ func TestA(t *testing.T) {
 		},
 		{
 			Desc: "ng - git command is failed",
+			Envs: envs,
 			Args: []string{
 				"-git", "/tmp/e2e007.sh",
 				"-prefix", "v",

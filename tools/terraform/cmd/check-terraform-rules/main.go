@@ -25,6 +25,7 @@ func main() {
 	var dirPathBase string
 
 	flag.StringVar(&dirPathBase, "d", "", "base directory path")
+	flag.Usage = usage
 
 	flag.Parse()
 
@@ -34,9 +35,13 @@ func main() {
 	}
 
 	uc := inject.NewUsecase()
-	if err := uc.CheckTerraformRules(ctx, dirPathBase, rule.Rules{
-		&rule.Rule001{},
-	}); err != nil {
+	if err := uc.CheckTerraformRules(
+		ctx,
+		dirPathBase,
+		rule.Rules{
+			&rule.Rule001{},
+		},
+	); err != nil {
 		if clierr, ok := errordefcli.AsCLIError(err); ok {
 			fmt.Fprintln(os.Stderr, clierr.Error())
 			os.Exit(clierr.ExitCode())
