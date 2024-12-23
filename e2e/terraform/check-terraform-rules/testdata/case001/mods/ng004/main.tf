@@ -7,7 +7,7 @@ terraform {
   }
 
   backend "gcs" {
-    bucket = "base-420514-terraform"
+    bucket = "base-999-terraform"
     prefix = "hoge"
   }
 
@@ -15,5 +15,5 @@ terraform {
 }
 
 provider "google" {
-  project = "base-420514"
+  project = "base-999"
 }
