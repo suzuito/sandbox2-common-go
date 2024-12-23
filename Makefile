@@ -33,10 +33,11 @@ test:
 .PHONY: e2e
 e2e:
 	make e2e-release-increment-release-version
+	make e2e-terraform-check-terraform-rules
 
 .PHONY: test
 merge-test-report:
-	go tool covdata percent -i=cov,tools/release/cov/e2e/increment-release-version -o=textfmt.txt
+	go tool covdata percent -i=cov,tools/release/cov/e2e/increment-release-version,tools/terraform/cov/e2e/check-terraform-rules -o=textfmt.txt
 	go tool cover -html=textfmt.txt -o=gocov.html
 	go tool cover -func=textfmt.txt -o=gocovfunc.txt
 
@@ -65,3 +66,4 @@ clean:
 	rm -rf cov/
 
 include Makefile.tools.release.mk
+include Makefile.tools.terraform.mk

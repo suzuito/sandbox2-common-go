@@ -1,21 +1,12 @@
 package main
 
 import (
-	"bytes"
-	"context"
-	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"os"
-	"os/exec"
-	"strings"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/smocker-dev/smocker/server/types"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/suzuito/sandbox2-common-go/libs/e2ehelpers"
 )
 
@@ -31,17 +22,16 @@ func TestA(t *testing.T) {
 	externalCommandFaker := e2ehelpers.ExternalCommandFaker{}
 	defer externalCommandFaker.Cleanup() //nolint:errcheck
 
-	testCases := []struct {
-		desc             string
-		args             []string
-		setup            func(*testing.T, uuid.UUID) error
-		expectedExitCode int
-		expectedStdout   string
-		expectedStderr   string
-	}{
+	envs := []string{
+		"GITHUB_HTTP_CLIENT_FAKE_SCHEME=http",
+		"GITHUB_HTTP_CLIENT_FAKE_HOST=localhost:8080",
+	}
+
+	testCases := []e2ehelpers.CLITestCase{
 		{
-			desc: "ok - increment patch (implicit -increment option)",
-			args: []string{
+			Desc: "ok - increment patch (implicit -increment option)",
+			Envs: envs,
+			Args: []string{
 				"-git", "/tmp/e2e001.sh",
 				"-prefix", "v",
 				"-owner", "owner01",
@@ -49,11 +39,11 @@ func TestA(t *testing.T) {
 				"-branch", "branch01",
 				"-token", "token01",
 			},
-			expectedExitCode: 0,
-			expectedStdout: e2ehelpers.NewLines(
+			ExpectedExitCode: 0,
+			ExpectedStdout: e2ehelpers.NewLines(
 				"created release draft v1.1.5",
 			),
-			setup: func(t *testing.T, testID uuid.UUID) error {
+			Setup: func(t *testing.T, testID e2ehelpers.TestID) error {
 				err := externalCommandFaker.Add(&e2ehelpers.ExternalCommandBehavior{
 					FilePath: "/tmp/e2e001.sh",
 					Stdout: e2ehelpers.NewLines(
@@ -106,8 +96,9 @@ func TestA(t *testing.T) {
 			},
 		},
 		{
-			desc: "ok - increment major",
-			args: []string{
+			Desc: "ok - increment major",
+			Envs: envs,
+			Args: []string{
 				"-git", "/tmp/e2e002.sh",
 				"-prefix", "v",
 				"-owner", "owner01",
@@ -116,11 +107,11 @@ func TestA(t *testing.T) {
 				"-token", "token01",
 				"-increment", "major",
 			},
-			expectedExitCode: 0,
-			expectedStdout: e2ehelpers.NewLines(
+			ExpectedExitCode: 0,
+			ExpectedStdout: e2ehelpers.NewLines(
 				"created release draft v2.0.0",
 			),
-			setup: func(t *testing.T, testID uuid.UUID) error {
+			Setup: func(t *testing.T, testID e2ehelpers.TestID) error {
 				err := externalCommandFaker.Add(&e2ehelpers.ExternalCommandBehavior{
 					FilePath: "/tmp/e2e002.sh",
 					Stdout: e2ehelpers.NewLines(
@@ -172,8 +163,9 @@ func TestA(t *testing.T) {
 			},
 		},
 		{
-			desc: "ok - increment minor",
-			args: []string{
+			Desc: "ok - increment minor",
+			Envs: envs,
+			Args: []string{
 				"-git", "/tmp/e2e003.sh",
 				"-prefix", "v",
 				"-owner", "owner01",
@@ -182,11 +174,11 @@ func TestA(t *testing.T) {
 				"-token", "token01",
 				"-increment", "minor",
 			},
-			expectedExitCode: 0,
-			expectedStdout: e2ehelpers.NewLines(
+			ExpectedExitCode: 0,
+			ExpectedStdout: e2ehelpers.NewLines(
 				"created release draft v1.2.0",
 			),
-			setup: func(t *testing.T, testID uuid.UUID) error {
+			Setup: func(t *testing.T, testID e2ehelpers.TestID) error {
 				err := externalCommandFaker.Add(&e2ehelpers.ExternalCommandBehavior{
 					FilePath: "/tmp/e2e003.sh",
 					Stdout: e2ehelpers.NewLines(
@@ -238,8 +230,9 @@ func TestA(t *testing.T) {
 			},
 		},
 		{
-			desc: "ng - no existing versions in git (missmatch prefix)",
-			args: []string{
+			Desc: "ng - no existing versions in git (missmatch prefix)",
+			Envs: envs,
+			Args: []string{
 				"-git", "/tmp/e2e005.sh",
 				"-prefix", "v",
 				"-owner", "owner01",
@@ -247,11 +240,11 @@ func TestA(t *testing.T) {
 				"-branch", "branch01",
 				"-token", "token01",
 			},
-			expectedExitCode: 2,
-			expectedStderr: e2ehelpers.NewLines(
+			ExpectedExitCode: 2,
+			ExpectedStderr: e2ehelpers.NewLines(
 				"no existing git versions",
 			),
-			setup: func(t *testing.T, testID uuid.UUID) error {
+			Setup: func(t *testing.T, testID e2ehelpers.TestID) error {
 				err := externalCommandFaker.Add(&e2ehelpers.ExternalCommandBehavior{
 					FilePath: "/tmp/e2e005.sh",
 					Stdout: e2ehelpers.NewLines(
@@ -268,8 +261,8 @@ func TestA(t *testing.T) {
 			},
 		},
 		{
-			desc: "ng - no existing versions in git",
-			args: []string{
+			Desc: "ng - no existing versions in git",
+			Args: []string{
 				"-git", "/tmp/e2e006.sh",
 				"-prefix", "v",
 				"-owner", "owner01",
@@ -277,11 +270,11 @@ func TestA(t *testing.T) {
 				"-branch", "branch01",
 				"-token", "token01",
 			},
-			expectedExitCode: 2,
-			expectedStderr: e2ehelpers.NewLines(
+			ExpectedExitCode: 2,
+			ExpectedStderr: e2ehelpers.NewLines(
 				"no existing git versions",
 			),
-			setup: func(t *testing.T, testID uuid.UUID) error {
+			Setup: func(t *testing.T, testID e2ehelpers.TestID) error {
 				err := externalCommandFaker.Add(&e2ehelpers.ExternalCommandBehavior{
 					FilePath: "/tmp/e2e006.sh",
 				})
@@ -293,8 +286,9 @@ func TestA(t *testing.T) {
 			},
 		},
 		{
-			desc: "ng - git command is failed",
-			args: []string{
+			Desc: "ng - git command is failed",
+			Envs: envs,
+			Args: []string{
 				"-git", "/tmp/e2e007.sh",
 				"-prefix", "v",
 				"-owner", "owner01",
@@ -302,11 +296,11 @@ func TestA(t *testing.T) {
 				"-branch", "branch01",
 				"-token", "token01",
 			},
-			expectedExitCode: 3,
-			expectedStderr: e2ehelpers.NewLines(
+			ExpectedExitCode: 3,
+			ExpectedStderr: e2ehelpers.NewLines(
 				"failed to git command with code 127",
 			),
-			setup: func(t *testing.T, testID uuid.UUID) error {
+			Setup: func(t *testing.T, testID e2ehelpers.TestID) error {
 				err := externalCommandFaker.Add(&e2ehelpers.ExternalCommandBehavior{
 					FilePath: "/tmp/e2e007.sh",
 					ExitCode: 127,
@@ -319,76 +313,76 @@ func TestA(t *testing.T) {
 			},
 		},
 		{
-			desc: "ng - option -git required",
-			args: []string{
+			Desc: "ng - option -git required",
+			Args: []string{
 				"-prefix", "v",
 				"-owner", "owner01",
 				"-repo", "repo01",
 			},
-			expectedExitCode: 1,
-			expectedStderr: e2ehelpers.NewLines(
+			ExpectedExitCode: 1,
+			ExpectedStderr: e2ehelpers.NewLines(
 				"-git is required",
 			),
 		},
 		{
-			desc: "ng - option -owner required",
-			args: []string{
+			Desc: "ng - option -owner required",
+			Args: []string{
 				"-git", "/tmp/e2e001.sh",
 				"-prefix", "v",
 				"-repo", "repo01",
 				"-branch", "branch01",
 				"-token", "token01",
 			},
-			expectedExitCode: 1,
-			expectedStderr: e2ehelpers.NewLines(
+			ExpectedExitCode: 1,
+			ExpectedStderr: e2ehelpers.NewLines(
 				"-owner is required",
 			),
 		},
 		{
-			desc: "ng - option -repo required",
-			args: []string{
+			Desc: "ng - option -repo required",
+			Args: []string{
 				"-git", "/tmp/e2e001.sh",
 				"-prefix", "v",
 				"-owner", "owner01",
 				"-branch", "branch01",
 				"-token", "token01",
 			},
-			expectedExitCode: 1,
-			expectedStderr: e2ehelpers.NewLines(
+			ExpectedExitCode: 1,
+			ExpectedStderr: e2ehelpers.NewLines(
 				"-repo is required",
 			),
 		},
 		{
-			desc: "ng - option -branch required",
-			args: []string{
+			Desc: "ng - option -branch required",
+			Args: []string{
 				"-git", "/tmp/e2e001.sh",
 				"-prefix", "v",
 				"-repo", "repo01",
 				"-owner", "owner01",
 				"-token", "token01",
 			},
-			expectedExitCode: 1,
-			expectedStderr: e2ehelpers.NewLines(
+			ExpectedExitCode: 1,
+			ExpectedStderr: e2ehelpers.NewLines(
 				"-branch is required",
 			),
 		},
 		{
-			desc: "ng - option -token required",
-			args: []string{
+			Desc: "ng - option -token required",
+			Args: []string{
 				"-git", "/tmp/e2e001.sh",
 				"-prefix", "v",
 				"-repo", "repo01",
 				"-owner", "owner01",
 				"-branch", "branch01",
 			},
-			expectedExitCode: 1,
-			expectedStderr: e2ehelpers.NewLines(
+			ExpectedExitCode: 1,
+			ExpectedStderr: e2ehelpers.NewLines(
 				"-token is required",
 			),
 		},
 		{
-			desc: "ng - unknown -increment-type",
-			args: []string{
+			Desc: "ng - unknown -increment-type",
+			Args: []string{
 				"-git", "/tmp/e2e001.sh",
 				"-increment", "x",
 				"-owner", "owner01",
@@ -396,52 +390,13 @@ func TestA(t *testing.T) {
 				"-branch", "branch01",
 				"-token", "token01",
 			},
-			expectedExitCode: 1,
-			expectedStderr: e2ehelpers.NewLines(
+			ExpectedExitCode: 1,
+			ExpectedStderr: e2ehelpers.NewLines(
 				"invalid increment type 'x'",
 			),
 		},
 	}
 	for _, tC := range testCases {
-		t.Run(tC.desc, func(t *testing.T) {
-			ctx := context.Background()
-
-			testID := uuid.New()
-
-			cmd := exec.CommandContext(
-				ctx,
-				filePathBin,
-				tC.args...,
-			)
-
-			cmd.Env = append(
-				os.Environ(),
-				fmt.Sprintf("E2E_TEST_ID=%s", testID),
-				"GITHUB_HTTP_CLIENT_FAKE_SCHEME=http",
-				"GITHUB_HTTP_CLIENT_FAKE_HOST=localhost:8080",
-			)
-
-			stdout, stderr := bytes.NewBufferString(""), bytes.NewBufferString("")
-			cmd.Stdout = stdout
-			cmd.Stderr = stderr
-
-			if tC.setup != nil {
-				if err := tC.setup(t, testID); err != nil {
-					require.Error(t, err, err.Error())
-				}
-			}
-
-			err := cmd.Run()
-			if err != nil {
-				var exiterr *exec.ExitError
-				if !errors.As(err, &exiterr) {
-					require.NoError(t, err, fmt.Sprintf("%s %s: %s", filePathBin, strings.Join(tC.args, " "), err.Error()))
-				}
-			}
-
-			assert.Equal(t, tC.expectedExitCode, cmd.ProcessState.ExitCode())
-			assert.Equal(t, tC.expectedStdout, stdout.String())
-			assert.Equal(t, tC.expectedStderr, stderr.String())
-		})
+		tC.Run(t, filePathBin)
 	}
 }
