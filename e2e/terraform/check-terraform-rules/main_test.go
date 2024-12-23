@@ -34,11 +34,17 @@ func TestCheckTerraformRules(t *testing.T) {
 			ExpectedStdout: strings.Join(
 				[]string{
 					fmt.Sprintf(`resource terraform.backend."gcs" not found (%s/case001/mods/ng001)`, dirPathTestdata),
+					"  expected: true",
+					"  actual: false",
 					fmt.Sprintf(`resource provider."google" not found (%s/case001/mods/ng002)`, dirPathTestdata),
+					"  expected: true",
+					"  actual: false",
 					fmt.Sprintf("invalid terraform.backend.\"gcs\".bucket (%s/case001/mods/ng003)", dirPathTestdata),
 					"  expected: base-999-terraform",
 					"  actual: hoge-terraform",
-					fmt.Sprintf("invalid terraform.backend.\"gcs\".prefix (%s/case001/mods/ng004)\n", dirPathTestdata),
+					fmt.Sprintf("invalid terraform.backend.\"gcs\".prefix (%s/case001/mods/ng004)", dirPathTestdata),
+					"  expected: mods/ng004",
+					"  actual: hoge\n",
 				},
 				"\n",
 			),

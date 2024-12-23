@@ -57,23 +57,40 @@ func (t *Rule001) Check(
 			return false, terrors.Errorf("invalid filepath.Rel: %w", err)
 		}
 
-		if !hasTerraformBackendGCS {
+		if !reporter.AssertTruef(
+			module.Path,
+			hasTerraformBackendGCS,
+			`resource terraform.backend."gcs" not found`,
+		) {
 			result = false
-			reporter.Reportf(module.Path, `resource terraform.backend."gcs" not found`)
-		} else if hasProviderGoogle {
-			if terraformBackendBucket != fmt.Sprintf("%s-terraform", providerGoogleProject) {
+		}
+
+		if hasProviderGoogle && hasTerraformBackendGCS {
+			if !reporter.AssertEqualf(
+				module.Path,
+				fmt.Sprintf("%s-terraform", providerGoogleProject),
+				terraformBackendBucket,
+				"invalid terraform.backend.\"gcs\".bucket",
+			) {
 				result = false
-				reporter.Reportf(module.Path, `invalid terraform.backend."gcs".bucket: %s`, terraformBackendBucket)
 			}
-			if terraformBackendPrefix != dirPathRel {
+
+			if !reporter.AssertEqualf(
+				module.Path,
+				dirPathRel,
+				terraformBackendPrefix,
+				"invalid terraform.backend.\"gcs\".prefix",
+			) {
 				result = false
-				reporter.Reportf(module.Path, `invalid terraform.backend."gcs".prefix: %s`, terraformBackendPrefix)
 			}
 		}
 
-		if !hasProviderGoogle {
+		if !reporter.AssertTruef(
+			module.Path,
+			hasProviderGoogle,
+			`resource provider."google" not found`,
+		) {
 			result = false
-			reporter.Reportf(module.Path, `resource provider."google" not found`)
 		}
 	}
 
