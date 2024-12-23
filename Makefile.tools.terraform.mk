@@ -7,7 +7,5 @@ tools/terraform/dist/e2e/check-terraform-rules: $(GO_SOURCES)
 
 .PHONY: e2e-terraform-check-terraform-rules
 e2e-terraform-check-terraform-rules:
-	make tools/terraform/dist/e2e/check-terraform-rules
-	mkdir -p tools/terraform/cov/e2e/check-terraform-rules
 	make start-e2e-environment
 	sh run-e2e.sh tools/terraform/dist/e2e/check-terraform-rules tools/terraform/cov/e2e/check-terraform-rules ./e2e/terraform/check-terraform-rules/...
