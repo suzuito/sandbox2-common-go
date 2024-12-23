@@ -60,10 +60,5 @@ test-local:
 test-ci:
 	make test e2e merge-test-report
 
-.PHONY: clean
-clean:
-	rm -fr dist/
-	rm -rf cov/
-
 include Makefile.tools.release.mk
 include Makefile.tools.terraform.mk
