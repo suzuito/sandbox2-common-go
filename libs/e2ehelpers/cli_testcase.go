@@ -22,6 +22,7 @@ type CLITestCase struct {
 	ExpectedExitCode int
 	ExpectedStdout   string
 	ExpectedStderr   string
+	Assertions       func(t *testing.T)
 }
 
 func (c *CLITestCase) Run(
@@ -66,5 +67,9 @@ func (c *CLITestCase) Run(
 		assert.Equal(t, c.ExpectedExitCode, cmd.ProcessState.ExitCode())
 		assert.Equal(t, strings.TrimRight(c.ExpectedStdout, "\n"), strings.TrimRight(stdout.String(), "\n"))
 		assert.Equal(t, strings.TrimRight(c.ExpectedStderr, "\n"), strings.TrimRight(stderr.String(), "\n"))
+
+		if c.Assertions != nil {
+			c.Assertions(t)
+		}
 	})
 }
