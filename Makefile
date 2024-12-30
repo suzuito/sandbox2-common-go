@@ -34,7 +34,7 @@ test:
 e2e:
 	make e2e-release-increment-release-version
 	make e2e-terraform-check-terraform-rules
-	make e2e-terraform-plan_in_pr
+	make e2e-terraform-terraform_on_github_action
 
 .PHONY: test
 merge-test-report:
