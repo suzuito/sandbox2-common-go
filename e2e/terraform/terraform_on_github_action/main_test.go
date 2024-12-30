@@ -209,7 +209,7 @@ func TestTerraformOnGithubAction(t *testing.T) {
 			ExpectedStdout: "no file changed in PR: 123",
 		},
 		{
-			Desc: "ok - [issue comment] - no file changed",
+			Desc: "ok - [issue comment]",
 			Envs: append(
 				envs,
 				"GITHUB_TOKEN=foo",
