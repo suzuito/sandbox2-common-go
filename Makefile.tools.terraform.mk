@@ -11,13 +11,13 @@ e2e-terraform-check-terraform-rules:
 	sh run-e2e.sh tools/terraform/dist/e2e/check-terraform-rules tools/terraform/cov/e2e/check-terraform-rules ./e2e/terraform/check-terraform-rules/...
 
 
-tools/terraform/dist/prd/plan_in_pr: $(GO_SOURCES)
+tools/terraform/dist/prd/terraform_on_github_action: $(GO_SOURCES)
 	mkdir -p $(dir $@) && go build -o $@ tools/terraform/cmd/$(notdir $@)/*.go
 
-tools/terraform/dist/e2e/plan_in_pr: $(GO_SOURCES)
+tools/terraform/dist/e2e/terraform_on_github_action: $(GO_SOURCES)
 	mkdir -p $(dir $@) && go build -cover -o $@ tools/terraform/cmd/$(notdir $@)/*.go
 
-.PHONY: e2e-terraform-plan_in_pr
-e2e-terraform-plan_in_pr:
+.PHONY: e2e-terraform-terraform_on_github_action
+e2e-terraform-terraform_on_github_action:
 	make start-e2e-environment
-	sh run-e2e.sh tools/terraform/dist/e2e/plan_in_pr tools/terraform/cov/e2e/plan_in_pr ./e2e/terraform/plan_in_pr/...
+	sh run-e2e.sh tools/terraform/dist/e2e/terraform_on_github_action tools/terraform/cov/e2e/terraform_on_github_action ./e2e/terraform/terraform_on_github_action/...

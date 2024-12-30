@@ -2,46 +2,75 @@ package businesslogics
 
 import (
 	"context"
+	"io/fs"
 	"os"
 	"path/filepath"
 
+	"github.com/google/go-github/v68/github"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsimple"
 	"github.com/suzuito/sandbox2-common-go/libs/terrors"
-	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/file"
-	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/module"
 	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/reporter"
 	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/rule"
+	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/terraformexe"
+	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/terraformmodels/file"
+	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/terraformmodels/module"
+	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/gateways"
 )
 
 type BusinessLogic interface {
 	ParseDir(
 		ctx context.Context,
 		path string,
-	) (*module.Module, error)
+	) (*module.Module, bool, error)
+	ParseBaseDir(
+		ctx context.Context,
+		path string,
+	) (module.Modules, error)
 	CheckRules(
 		ctx context.Context,
 		dirPathBase string,
 		modules module.Modules,
 		rules rule.Rules,
 	) (bool, error)
+	FetchPathsChangedInPR(
+		ctx context.Context,
+		owner string,
+		repo string,
+		pr int,
+	) ([]string, error)
+	TerraformPlan(
+		ctx context.Context,
+		modules module.Modules,
+	) (terraformexe.PlanResults, error)
+	TerraformApply(
+		ctx context.Context,
+		modules module.Modules,
+	) (terraformexe.ApplyResults, error)
 }
 
 type impl struct {
-	Reporter reporter.Reporter
+	Reporter                  reporter.Reporter
+	GithubPullRequestsService gateways.GithubPullRequestsService
+	Terraform                 gateways.TerraformGateway
 }
 
 func (t *impl) ParseDir(
 	ctx context.Context,
 	path string,
-) (*module.Module, error) {
+) (*module.Module, bool, error) {
 	entries, err := os.ReadDir(path)
 	if err != nil {
-		return nil, terrors.Errorf("failed to os.ReadDir: %s: %w", path, err)
+		return nil, false, terrors.Errorf("failed to os.ReadDir: %s: %w", path, err)
+	}
+
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return nil, false, terrors.Errorf("failed to filepath.Abs: %s: %w", path, err)
 	}
 
 	module := module.Module{
-		Path: path,
+		AbsPath: module.ModulePath(absPath),
 	}
 	for _, entry := range entries {
 		if entry.Name() == ".terraform.lock.hcl" {
@@ -57,26 +86,63 @@ func (t *impl) ParseDir(
 
 		content, err := os.ReadFile(filePath)
 		if err != nil {
-			return nil, terrors.Errorf("failed to os.ReadFile: %s: %w", filePath, err)
+			return nil, false, terrors.Errorf("failed to os.ReadFile: %s: %w", filePath, err)
+		}
+
+		absFilePath, err := filepath.Abs(filePath)
+		if err != nil {
+			return nil, false, terrors.Errorf("failed to filepath.Abs: %s: %w", filePath, err)
 		}
 
 		tffile := file.File{
-			Path: filePath,
+			AbsPath: absFilePath,
 		}
 		if err := hclsimple.Decode(filePath+".hcl", content, nil, &tffile); err != nil {
 			_, ok := err.(hcl.Diagnostics)
 			if !ok {
-				return nil, terrors.Errorf("failed to hclsimple.Decode: %w", err)
+				return nil, false, terrors.Errorf("failed to hclsimple.Decode: %w", err)
 			}
 		}
 
 		module.Files = append(module.Files, &tffile)
 	}
 
-	return &module, nil
+	if len(module.Files) <= 0 {
+		return nil, false, nil
+	}
+
+	return &module, true, nil
 }
 
-func (t impl) CheckRules(
+func (t *impl) ParseBaseDir(
+	ctx context.Context,
+	basePath string,
+) (module.Modules, error) {
+	modules := module.Modules{}
+
+	if err := filepath.Walk(basePath, func(path string, info fs.FileInfo, err error) error {
+		if !info.IsDir() {
+			return nil
+		}
+
+		module, ok, err := t.ParseDir(ctx, path)
+		if err != nil {
+			return terrors.Wrap(err)
+		} else if !ok {
+			return nil
+		}
+
+		modules = append(modules, module)
+
+		return nil
+	}); err != nil {
+		return modules, terrors.Wrap(err)
+	}
+
+	return modules, nil
+}
+
+func (t *impl) CheckRules(
 	ctx context.Context,
 	dirPathBase string,
 	modules module.Modules,
@@ -97,10 +163,87 @@ func (t impl) CheckRules(
 	return result, nil
 }
 
+func (t *impl) FetchPathsChangedInPR(
+	ctx context.Context,
+	owner string,
+	repo string,
+	pr int,
+) ([]string, error) {
+	returned := []string{}
+
+	perPage := 100
+	for page := 1; ; page++ {
+		commitFiles, _, err := t.GithubPullRequestsService.ListFiles(
+			ctx,
+			owner,
+			repo,
+			pr,
+			&github.ListOptions{Page: page, PerPage: perPage},
+		)
+		if err != nil {
+			return []string{}, terrors.Errorf("failed to t.GithubPullRequestsService.ListFiles: %w", err)
+		}
+
+		for _, commitFile := range commitFiles {
+			returned = append(returned, *commitFile.Filename)
+		}
+
+		if len(commitFiles) < perPage {
+			break
+		}
+	}
+
+	return returned, nil
+}
+
+func (t *impl) TerraformPlan(
+	ctx context.Context,
+	modules module.Modules,
+) (terraformexe.PlanResults, error) {
+	rs := terraformexe.PlanResults{}
+	for _, m := range modules {
+		if err := t.Terraform.Init(ctx, m); err != nil {
+			return nil, terrors.Errorf("failed to terraform.Init: %w", err)
+		}
+
+		r, err := t.Terraform.Plan(ctx, m)
+		if err != nil {
+			return nil, terrors.Errorf("failed to terraform.Plan: %w", err)
+		}
+
+		rs = append(rs, r)
+	}
+	return rs, nil
+}
+
+func (t *impl) TerraformApply(
+	ctx context.Context,
+	modules module.Modules,
+) (terraformexe.ApplyResults, error) {
+	rs := terraformexe.ApplyResults{}
+	for _, m := range modules {
+		if err := t.Terraform.Init(ctx, m); err != nil {
+			return nil, terrors.Errorf("failed to terraform.Init: %w", err)
+		}
+
+		r, err := t.Terraform.Apply(ctx, m)
+		if err != nil {
+			return nil, terrors.Errorf("failed to terraform.Apply: %w", err)
+		}
+
+		rs = append(rs, r)
+	}
+	return rs, nil
+}
+
 func New(
 	reporter reporter.Reporter,
+	githubPullRequestsService gateways.GithubPullRequestsService,
+	terraform gateways.TerraformGateway,
 ) *impl {
 	return &impl{
-		Reporter: reporter,
+		Reporter:                  reporter,
+		GithubPullRequestsService: githubPullRequestsService,
+		Terraform:                 terraform,
 	}
 }

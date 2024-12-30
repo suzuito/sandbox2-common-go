@@ -1,3 +1,3 @@
 provider "google" {
-    project = "hoge"
+    project = "prj01"
 }

@@ -1,5 +1,5 @@
 provider "google" {
-    project = "hoge"
+    project = "prj01"
 }
 
 module "r2m1" {

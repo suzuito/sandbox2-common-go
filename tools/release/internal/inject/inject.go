@@ -5,41 +5,13 @@ import (
 
 	"github.com/google/go-github/v67/github"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/suzuito/sandbox2-common-go/libs/e2ehelpers"
 	"github.com/suzuito/sandbox2-common-go/libs/terrors"
 	"github.com/suzuito/sandbox2-common-go/tools/release/internal/businesslogics"
 	"github.com/suzuito/sandbox2-common-go/tools/release/internal/infra/gh/repositories"
 	"github.com/suzuito/sandbox2-common-go/tools/release/internal/infra/local/gateways"
 	"github.com/suzuito/sandbox2-common-go/tools/release/internal/usecases"
 )
-
-type RoundTripperForE2E struct {
-	e2eTestID  string
-	origin     http.RoundTripper
-	fakeScheme string
-	fakeHost   string
-}
-
-func (t *RoundTripperForE2E) RoundTrip(req *http.Request) (*http.Response, error) {
-	req.Header.Set("E2E-TestId", t.e2eTestID)
-	originalURL := req.URL
-	originalURL.Scheme = t.fakeScheme
-	originalURL.Host = t.fakeHost
-	return t.origin.RoundTrip(req)
-}
-
-func NewRoundTripperForE2E(
-	e2eTestID string,
-	origin http.RoundTripper,
-	fakeScheme string,
-	fakeHost string,
-) *RoundTripperForE2E {
-	return &RoundTripperForE2E{
-		e2eTestID:  e2eTestID,
-		origin:     origin,
-		fakeScheme: fakeScheme,
-		fakeHost:   fakeHost,
-	}
-}
 
 func NewUsecase(
 	filePathGit string,
@@ -53,7 +25,7 @@ func NewUsecase(
 	githubHTTPClient := http.DefaultClient
 	if env.E2ETestID != "" {
 		githubHTTPClient = &http.Client{
-			Transport: NewRoundTripperForE2E(
+			Transport: e2ehelpers.NewRoundTripperForE2E(
 				env.E2ETestID,
 				http.DefaultTransport,
 				env.GithubHTTPClientFakeScheme,
