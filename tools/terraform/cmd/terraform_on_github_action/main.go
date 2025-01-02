@@ -13,6 +13,18 @@ import (
 )
 
 var usageString = `Terraform command wrapper for Github Action.
+
+When this command is used?
+- When a user comments 'terraform plan' on a GitHub Pull request, this command will run 'terraform plan' for changed files in PR.
+- When a user comments 'terraform apply' on a GitHub Pull request, this command will run 'terraform apply' for changed files in PR.
+- When a commit on GitHub Pull request is created, this command will run 'terraform plan' for changed files in PR.
+
+What is exit code on this command?
+- 0: terraform command is sucessed with empty diff
+- 1: command line arg error
+- 2: terraform command is sucessed with non-empty diff
+- others: unknown errors
+
 `
 
 func usage() {

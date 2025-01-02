@@ -63,3 +63,4 @@ test-ci:
 
 include Makefile.tools.release.mk
 include Makefile.tools.terraform.mk
+include Makefile.tools.fakecmd.mk

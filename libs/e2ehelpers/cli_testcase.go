@@ -19,6 +19,7 @@ type CLITestCase struct {
 	Envs             []string
 	Args             []string
 	Setup            func(t *testing.T, testID TestID) error
+	Teardown         func(t *testing.T, testID TestID) error
 	ExpectedExitCode int
 	ExpectedStdout   string
 	ExpectedStderr   string
@@ -65,11 +66,17 @@ func (c *CLITestCase) Run(
 		}
 
 		assert.Equal(t, c.ExpectedExitCode, cmd.ProcessState.ExitCode())
-		assert.Equal(t, strings.TrimRight(c.ExpectedStdout, "\n"), strings.TrimRight(stdout.String(), "\n"))
-		assert.Equal(t, strings.TrimRight(c.ExpectedStderr, "\n"), strings.TrimRight(stderr.String(), "\n"))
+		assert.Equal(t, strings.TrimRight(c.ExpectedStdout, "\n"), strings.TrimRight(stdout.String(), "\n"), "unexpected stdout")
+		assert.Equal(t, strings.TrimRight(c.ExpectedStderr, "\n"), strings.TrimRight(stderr.String(), "\n"), "unexpected stderr")
 
 		if c.Assertions != nil {
 			c.Assertions(t)
+		}
+
+		if c.Teardown != nil {
+			if err := c.Teardown(t, testID); err != nil {
+				require.Error(t, err, err.Error())
+			}
 		}
 	})
 }

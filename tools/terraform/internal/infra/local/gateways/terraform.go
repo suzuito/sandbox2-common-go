@@ -62,6 +62,7 @@ func (t *terraformGateway) Plan(
 
 	return &terraformexe.PlanResult{
 		IsPlanDiff: result.ExitCode == 2,
+		Module:     module,
 	}, nil
 }
 
@@ -100,6 +101,9 @@ func (t *terraformGateway) run(
 ) (*runResult, error) {
 	commandline := fmt.Sprintf("%s %s", commandName, strings.Join(args, " "))
 	fmt.Fprintf(t.stdout, "\n")
+	fmt.Fprintln(t.stdout, "*************")
+	fmt.Fprintln(t.stdout, "*************")
+	fmt.Fprintln(t.stdout, "*************")
 	fmt.Fprintf(t.stdout, "==== CMD ====\n")
 	fmt.Fprintf(t.stdout, "%s\n", commandline)
 	fmt.Fprintf(t.stdout, "==== OUT ====\n")

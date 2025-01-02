@@ -2,6 +2,7 @@ package e2ehelpers
 
 import (
 	"encoding/json"
+	"os"
 	"strings"
 )
 
@@ -22,4 +23,23 @@ func MinifyJSONString(a string) string {
 	}
 
 	return string(r)
+}
+
+func MustMarshalJSON(v any) []byte {
+	b, err := json.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+
+	return b
+}
+
+func MustWriteJSONFile(filePath string, v any) {
+	MustWriteFile(filePath, MustMarshalJSON(v))
+}
+
+func MustWriteFile(filePath string, b []byte) {
+	if err := os.WriteFile(filePath, b, 0755); err != nil {
+		panic(err)
+	}
 }
