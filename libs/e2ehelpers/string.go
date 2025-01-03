@@ -43,3 +43,9 @@ func MustWriteFile(filePath string, b []byte) {
 		panic(err)
 	}
 }
+
+func MustMkdir(dirPath string) {
+	if err := os.Mkdir(dirPath, 0755); err != nil {
+		panic(err)
+	}
+}

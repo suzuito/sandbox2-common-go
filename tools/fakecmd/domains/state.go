@@ -7,5 +7,4 @@ type State struct {
 type ExecutedHistories []ExecutedHistory
 
 type ExecutedHistory struct {
-	Args []string
 }

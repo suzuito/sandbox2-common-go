@@ -68,7 +68,7 @@ func (t *FakeCommand) initBaseDir(force bool) error {
 func (t *FakeCommand) initCopyFakeCMD() error {
 	src, err := os.Open(t.filePathFakeCMD)
 	if err != nil {
-		return fmt.Errorf("failed to os.Open: %w", err)
+		return fmt.Errorf("fakecmd is invalid: %s: %w", t.filePathFakeCMD, err)
 	}
 	defer src.Close()
 
@@ -77,7 +77,13 @@ func (t *FakeCommand) initCopyFakeCMD() error {
 		return fmt.Errorf("failed to Stat: %w", err)
 	}
 
-	dst, err := os.Create(t.dirPath.FilePathCommand())
+	dstFilePathFakeCMD := t.dirPath.FilePathCommand()
+
+	if _, err := os.Stat(dstFilePathFakeCMD); err == nil {
+		return fmt.Errorf("cloned fakecmd already exists: %s", dstFilePathFakeCMD)
+	}
+
+	dst, err := os.Create(dstFilePathFakeCMD)
 	if err != nil {
 		return fmt.Errorf("failed to os.Create: %w", err)
 	}
@@ -117,8 +123,6 @@ func (t *FakeCommand) Cleanup() error {
 func (t *FakeCommand) DirPath() DirPathFakeCommand {
 	return t.dirPath
 }
-
-// func (t *FakeCommand) AssertNCalled(tt *testing.T, n int, arg []string) bool {}
 
 func NewFakeCommand(
 	filePathFakeCMD string,

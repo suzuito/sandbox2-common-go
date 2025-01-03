@@ -106,9 +106,7 @@ func main1() code {
 	}
 
 	closeState := func() {
-		state.ExecutedHistories = append(state.ExecutedHistories, domains.ExecutedHistory{
-			Args: os.Args,
-		})
+		state.ExecutedHistories = append(state.ExecutedHistories, domains.ExecutedHistory{})
 		b, err := json.Marshal(state)
 		if err != nil {
 			panic(err)
