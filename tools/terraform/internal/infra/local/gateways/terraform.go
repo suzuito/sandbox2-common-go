@@ -57,7 +57,7 @@ func (t *terraformGateway) Plan(
 	if err != nil {
 		return nil, terrors.Wrap(err)
 	} else if result.ExitCode != 0 && result.ExitCode != 2 {
-		return nil, fmt.Errorf("failed to init")
+		return nil, fmt.Errorf("failed to plan")
 	}
 
 	return &terraformexe.PlanResult{
@@ -83,7 +83,7 @@ func (t *terraformGateway) Apply(
 	if err != nil {
 		return nil, terrors.Wrap(err)
 	} else if result.ExitCode != 0 {
-		return nil, fmt.Errorf("failed to init")
+		return nil, fmt.Errorf("failed to apply")
 	}
 
 	return &terraformexe.ApplyResult{}, nil

@@ -140,6 +140,7 @@ func (t *impl) TerraformOnGithubAction(
 		return nil
 	}
 
+	diff := false
 	for _, module := range modules {
 		if err := t.businessLogic.TerraformInit(ctx, module); err != nil {
 			return terrors.Wrap(err)
@@ -150,11 +151,20 @@ func (t *impl) TerraformOnGithubAction(
 			return terrors.Wrap(err)
 		}
 
-		if arg.PlanOnly {
-			continue
+		if planResult.IsPlanDiff {
+			diff = true
 		}
+	}
 
-		if _, err := t.businessLogic.TerraformApply(ctx, planResult.Module); err != nil {
+	if arg.PlanOnly {
+		if diff {
+			return errordefcli.NewCLIError(2, "diff at `terraform plan`")
+		}
+		return nil
+	}
+
+	for _, module := range modules {
+		if _, err := t.businessLogic.TerraformApply(ctx, module); err != nil {
 			return terrors.Wrap(err)
 		}
 	}
