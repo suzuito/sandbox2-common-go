@@ -39,14 +39,18 @@ type BusinessLogic interface {
 		repo string,
 		pr int,
 	) ([]string, error)
+	TerraformInit(
+		ctx context.Context,
+		module *module.Module,
+	) error
 	TerraformPlan(
 		ctx context.Context,
-		modules module.Modules,
-	) (terraformexe.PlanResults, error)
+		module *module.Module,
+	) (*terraformexe.PlanResult, error)
 	TerraformApply(
 		ctx context.Context,
-		modules module.Modules,
-	) (terraformexe.ApplyResults, error)
+		module *module.Module,
+	) (*terraformexe.ApplyResult, error)
 }
 
 type impl struct {
@@ -196,44 +200,36 @@ func (t *impl) FetchPathsChangedInPR(
 	return returned, nil
 }
 
+func (t *impl) TerraformInit(
+	ctx context.Context,
+	module *module.Module,
+) error {
+	if err := t.Terraform.Init(ctx, module); err != nil {
+		return terrors.Errorf("failed to terraform.Init: %w", err)
+	}
+	return nil
+}
+
 func (t *impl) TerraformPlan(
 	ctx context.Context,
-	modules module.Modules,
-) (terraformexe.PlanResults, error) {
-	rs := terraformexe.PlanResults{}
-	for _, m := range modules {
-		if err := t.Terraform.Init(ctx, m); err != nil {
-			return nil, terrors.Errorf("failed to terraform.Init: %w", err)
-		}
-
-		r, err := t.Terraform.Plan(ctx, m)
-		if err != nil {
-			return nil, terrors.Errorf("failed to terraform.Plan: %w", err)
-		}
-
-		rs = append(rs, r)
+	module *module.Module,
+) (*terraformexe.PlanResult, error) {
+	r, err := t.Terraform.Plan(ctx, module)
+	if err != nil {
+		return nil, terrors.Errorf("failed to terraform.Plan: %w", err)
 	}
-	return rs, nil
+	return r, nil
 }
 
 func (t *impl) TerraformApply(
 	ctx context.Context,
-	modules module.Modules,
-) (terraformexe.ApplyResults, error) {
-	rs := terraformexe.ApplyResults{}
-	for _, m := range modules {
-		if err := t.Terraform.Init(ctx, m); err != nil {
-			return nil, terrors.Errorf("failed to terraform.Init: %w", err)
-		}
-
-		r, err := t.Terraform.Apply(ctx, m)
-		if err != nil {
-			return nil, terrors.Errorf("failed to terraform.Apply: %w", err)
-		}
-
-		rs = append(rs, r)
+	module *module.Module,
+) (*terraformexe.ApplyResult, error) {
+	r, err := t.Terraform.Apply(ctx, module)
+	if err != nil {
+		return nil, terrors.Errorf("failed to terraform.Apply: %w", err)
 	}
-	return rs, nil
+	return r, nil
 }
 
 func New(

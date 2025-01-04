@@ -6,8 +6,6 @@ const (
 	BehaviorTypeStdoutStderrExitCode = iota + 1
 )
 
-type Behaviors []Behavior
-
 type Behavior struct {
 	Type                         BehaviorType
 	BehaviorStdoutStderrExitCode *BehaviorStdoutStderrExitCode
@@ -18,3 +16,5 @@ type BehaviorStdoutStderrExitCode struct {
 	Stderr   string
 	ExitCode uint8
 }
+
+type Behaviors []Behavior

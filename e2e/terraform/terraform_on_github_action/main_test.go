@@ -9,7 +9,9 @@ import (
 	"testing"
 
 	"github.com/smocker-dev/smocker/server/types"
+	"github.com/stretchr/testify/require"
 	"github.com/suzuito/sandbox2-common-go/libs/e2ehelpers"
+	"github.com/suzuito/sandbox2-common-go/tools/fakecmd/domains"
 )
 
 var googleCloudProjectID = "prj01"
@@ -37,131 +39,189 @@ func TestTerraformOnGithubAction(t *testing.T) {
 	externalCommandFaker := e2ehelpers.ExternalCommandFaker{}
 	defer externalCommandFaker.Cleanup()
 
-	testCases := []e2ehelpers.CLITestCase{
+	commandFaker := domains.MustByEnv()
+	defer commandFaker.Cleanup()
+
+	testCases := []e2ehelpers.CLITestCaseV2{
 		{
 			Desc: "ng - -d is required",
-			Envs: append(
-				envs,
-				"GITHUB_TOKEN=foo",
-			),
-			Args: []string{
-				"-p", googleCloudProjectID,
-				"-github-context", "{}",
-				"-git-rootdir", "dummygithubroot",
+			Setup: func(
+				t *testing.T,
+				testID e2ehelpers.TestID,
+				input *e2ehelpers.CLITestCaseV2Input,
+				expected *e2ehelpers.CLITestCaseV2Expected,
+			) {
+				input.Envs = append(
+					envs,
+					"GITHUB_TOKEN=foo",
+				)
+				input.Args = []string{
+					"-p", googleCloudProjectID,
+					"-github-context", "{}",
+					"-git-rootdir", "dummygithubroot",
+				}
+				expected.ExitCode = 1
+				expected.Stderr = "-d is required"
 			},
-			ExpectedExitCode: 1,
-			ExpectedStderr:   "-d is required",
 		},
 		{
 			Desc: "ng - -p is required",
-			Envs: append(
-				envs,
-				"GITHUB_TOKEN=foo",
-			),
-			Args: []string{
-				"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-				"-github-context", "{}",
-				"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
+			Setup: func(
+				t *testing.T,
+				testID e2ehelpers.TestID,
+				input *e2ehelpers.CLITestCaseV2Input,
+				expected *e2ehelpers.CLITestCaseV2Expected,
+			) {
+				input.Envs = append(
+					envs,
+					"GITHUB_TOKEN=foo",
+				)
+				input.Args = []string{
+					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
+					"-github-context", "{}",
+					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
+				}
+				expected.ExitCode = 1
+				expected.Stderr = "-p is required"
 			},
-			ExpectedExitCode: 1,
-			ExpectedStderr:   "-p is required",
 		},
 		{
 			Desc: "ng - -github-context is required",
-			Envs: append(
-				envs,
-				"GITHUB_TOKEN=foo",
-			),
-			Args: []string{
-				"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-				"-p", googleCloudProjectID,
-				"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
+			Setup: func(
+				t *testing.T,
+				testID e2ehelpers.TestID,
+				input *e2ehelpers.CLITestCaseV2Input,
+				expected *e2ehelpers.CLITestCaseV2Expected,
+			) {
+				input.Envs = append(
+					envs,
+					"GITHUB_TOKEN=foo",
+				)
+				input.Args = []string{
+					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
+					"-p", googleCloudProjectID,
+					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
+				}
+				expected.ExitCode = 1
+				expected.Stderr = "-github-context is required"
 			},
-			ExpectedExitCode: 1,
-			ExpectedStderr:   "-github-context is required",
 		},
 		{
 			Desc: "ng - -git-rootdir is required",
-			Envs: append(
-				envs,
-				"GITHUB_TOKEN=foo",
-			),
-			Args: []string{
-				"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-				"-p", googleCloudProjectID,
-				"-github-context", "{}",
+			Setup: func(
+				t *testing.T,
+				testID e2ehelpers.TestID,
+				input *e2ehelpers.CLITestCaseV2Input,
+				expected *e2ehelpers.CLITestCaseV2Expected,
+			) {
+				input.Envs = append(
+					envs,
+					"GITHUB_TOKEN=foo",
+				)
+				input.Args = []string{
+					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
+					"-p", googleCloudProjectID,
+					"-github-context", "{}",
+				}
+				expected.ExitCode = 1
+				expected.Stderr = "-git-rootdir is required"
 			},
-			ExpectedExitCode: 1,
-			ExpectedStderr:   "-git-rootdir is required",
 		},
 		{
 			Desc: "ng - invalid base directory",
-			Envs: append(
-				envs,
-				"GITHUB_TOKEN=foo",
-			),
-			Args: []string{
-				"-d", fmt.Sprintf("%s/ghrepo01/caseXX", dirPathTestdata),
-				"-p", googleCloudProjectID,
-				"-github-context", "{}",
-				"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
+			Setup: func(
+				t *testing.T,
+				testID e2ehelpers.TestID,
+				input *e2ehelpers.CLITestCaseV2Input,
+				expected *e2ehelpers.CLITestCaseV2Expected,
+			) {
+				input.Envs = append(
+					envs,
+					"GITHUB_TOKEN=foo",
+				)
+				input.Args = []string{
+					"-d", fmt.Sprintf("%s/ghrepo01/caseXX", dirPathTestdata),
+					"-p", googleCloudProjectID,
+					"-github-context", "{}",
+					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
+				}
+				expected.ExitCode = 1
+				expected.Stderr = fmt.Sprintf(
+					"invalid base dir: %s/ghrepo01/caseXX: stat %s/ghrepo01/caseXX: no such file or directory",
+					dirPathTestdata, dirPathTestdata,
+				)
 			},
-			ExpectedExitCode: 1,
-			ExpectedStderr: fmt.Sprintf(
-				"invalid base dir: %s/ghrepo01/caseXX: stat %s/ghrepo01/caseXX: no such file or directory",
-				dirPathTestdata, dirPathTestdata,
-			),
 		},
 		{
 			Desc: "ng - github context is invalid json",
-			Envs: append(
-				envs,
-				"GITHUB_TOKEN=foo",
-			),
-			Args: []string{
-				"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-				"-p", googleCloudProjectID,
-				"-github-context", "dummygithubcontext",
-				"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
+			Setup: func(
+				t *testing.T,
+				testID e2ehelpers.TestID,
+				input *e2ehelpers.CLITestCaseV2Input,
+				expected *e2ehelpers.CLITestCaseV2Expected,
+			) {
+				input.Envs = append(
+					envs,
+					"GITHUB_TOKEN=foo",
+				)
+				input.Args = []string{
+					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
+					"-p", googleCloudProjectID,
+					"-github-context", "dummygithubcontext",
+					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
+				}
+				expected.ExitCode = 1
+				expected.Stderr = "github context is invalid json: dummygithubcontext: invalid character 'd' looking for beginning of value"
 			},
-			ExpectedExitCode: 1,
-			ExpectedStderr:   "github context is invalid json: dummygithubcontext: invalid character 'd' looking for beginning of value",
 		},
 		{
 			Desc: "ok - skipped github action event",
-			Envs: append(
-				envs,
-				"GITHUB_TOKEN=foo",
-			),
-			Args: []string{
-				"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-				"-p", googleCloudProjectID,
-				"-github-context", "{}",
-				"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
+			Setup: func(
+				t *testing.T,
+				testID e2ehelpers.TestID,
+				input *e2ehelpers.CLITestCaseV2Input,
+				expected *e2ehelpers.CLITestCaseV2Expected,
+			) {
+				input.Envs = append(
+					envs,
+					"GITHUB_TOKEN=foo",
+				)
+				input.Args = []string{
+					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
+					"-p", googleCloudProjectID,
+					"-github-context", "{}",
+					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
+				}
+				expected.Stdout = "skipped"
 			},
-			ExpectedStdout: "skipped",
 		},
 		// issue comment
 		{
 			Desc: "ok - [issue comment] - terraform plan - no file changed",
-			Envs: append(
-				envs,
-				"GITHUB_TOKEN=foo",
-			),
-			Args: []string{
-				"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-				"-p", googleCloudProjectID,
-				"-github-context", e2ehelpers.MinifyJSONString(`{
+			Setup: func(
+				t *testing.T,
+				testID e2ehelpers.TestID,
+				input *e2ehelpers.CLITestCaseV2Input,
+				expected *e2ehelpers.CLITestCaseV2Expected,
+			) {
+				input.Envs = append(
+					envs,
+					"GITHUB_TOKEN=foo",
+				)
+				input.Args = []string{
+					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
+					"-p", googleCloudProjectID,
+					"-github-context", e2ehelpers.MinifyJSONString(`{
 				    "event_name":"issue_comment",
 					"repository":"owner01/repo01",
 					"repository_owner":"owner01",
 					"issue":{"number":123,"pull_request":{}},
 					"event":{"comment":{"body":"///terraform plan"}}
 				}`),
-				"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
-			},
-			Setup: func(t *testing.T, testID e2ehelpers.TestID) error {
-				if err := smockerClient.PostMocks(
+					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
+				}
+
+				require.NoError(t, smockerClient.PostMocks(
 					types.Mocks{
 						{
 							Request: types.MockRequest{
@@ -200,35 +260,241 @@ func TestTerraformOnGithubAction(t *testing.T) {
 						},
 					},
 					false,
-				); err != nil {
-					return err
-				}
+				))
 
-				return nil
+				expected.Stdout = "no file changed in PR: 123"
 			},
-			ExpectedStdout: "no file changed in PR: 123",
 		},
 		{
 			Desc: "ok - [issue comment] - terraform plan - with empty diff",
-			Envs: append(
-				envs,
-				"GITHUB_TOKEN=foo",
-				"FILE_PATH_TERRAFORM=/tmp/terraform001.sh",
-			),
-			Args: []string{
-				"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-				"-p", googleCloudProjectID,
-				"-github-context", e2ehelpers.MinifyJSONString(`{
-				    "event_name":"issue_comment",
-					"repository":"owner01/repo01",
-					"repository_owner":"owner01",
-					"issue":{"number":123,"pull_request":{}},
-					"event":{"comment":{"body":"///terraform plan"}}
-				}`),
-				"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
+			Setup: func(
+				t *testing.T,
+				testID e2ehelpers.TestID,
+				input *e2ehelpers.CLITestCaseV2Input,
+				expected *e2ehelpers.CLITestCaseV2Expected,
+			) {
+				require.NoError(t, smockerClient.PostMocks(
+					types.Mocks{
+						{
+							Request: types.MockRequest{
+								Method: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "GET",
+								},
+								Path: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "/repos/owner01/repo01/pulls/123/files",
+								},
+								QueryParams: types.MultiMapMatcher{
+									"page": types.StringMatcherSlice{
+										{Matcher: "ShouldEqual", Value: "1"},
+									},
+									"per_page": types.StringMatcherSlice{
+										{Matcher: "ShouldEqual", Value: "100"},
+									},
+								},
+								Headers: types.MultiMapMatcher{
+									"E2e-Testid": {
+										{
+											Matcher: "ShouldEqual",
+											Value:   testID.String(),
+										},
+									},
+								},
+							},
+							Response: &types.MockResponse{
+								Status: http.StatusCreated,
+								Headers: types.MapStringSlice{
+									"Content-Type": types.StringSlice{"application/json"},
+								},
+								Body: `[
+									    {"filename":"hoge/fuga.go"},
+									    {"filename":"case01/roots/r1/main.tf"},
+									    {"filename":"case01/roots/r2/.terraform.lock.hcl"},
+									    {"filename":"case01/commons/r3m1m1/main.tf"}
+									]`,
+							},
+						},
+					},
+					false,
+				))
+
+				fcmd := commandFaker.AddInTest(t, domains.Behaviors{
+					{
+						Type: domains.BehaviorTypeStdoutStderrExitCode,
+						BehaviorStdoutStderrExitCode: &domains.BehaviorStdoutStderrExitCode{
+							Stdout: "this is terraform command stdout\n",
+							Stderr: "this is terraform command stderr\n",
+						},
+					},
+					{
+						Type: domains.BehaviorTypeStdoutStderrExitCode,
+						BehaviorStdoutStderrExitCode: &domains.BehaviorStdoutStderrExitCode{
+							Stdout: "this is terraform command stdout\n",
+							Stderr: "this is terraform command stderr\n",
+						},
+					},
+					{
+						Type: domains.BehaviorTypeStdoutStderrExitCode,
+						BehaviorStdoutStderrExitCode: &domains.BehaviorStdoutStderrExitCode{
+							Stdout: "this is terraform command stdout\n",
+							Stderr: "this is terraform command stderr\n",
+						},
+					},
+					{
+						Type: domains.BehaviorTypeStdoutStderrExitCode,
+						BehaviorStdoutStderrExitCode: &domains.BehaviorStdoutStderrExitCode{
+							Stdout: "this is terraform command stdout\n",
+							Stderr: "this is terraform command stderr\n",
+						},
+					},
+					{
+						Type: domains.BehaviorTypeStdoutStderrExitCode,
+						BehaviorStdoutStderrExitCode: &domains.BehaviorStdoutStderrExitCode{
+							Stdout: "this is terraform command stdout\n",
+							Stderr: "this is terraform command stderr\n",
+						},
+					},
+					{
+						Type: domains.BehaviorTypeStdoutStderrExitCode,
+						BehaviorStdoutStderrExitCode: &domains.BehaviorStdoutStderrExitCode{
+							Stdout: "this is terraform command stdout\n",
+							Stderr: "this is terraform command stderr\n",
+						},
+					},
+				})
+
+				input.Envs = append(
+					envs,
+					"GITHUB_TOKEN=foo",
+					fmt.Sprintf("FILE_PATH_TERRAFORM=%s", fcmd.DirPath().FilePathCommand()),
+				)
+				input.Args = []string{
+					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
+					"-p", googleCloudProjectID,
+					"-github-context", e2ehelpers.MinifyJSONString(`{
+					    "event_name":"issue_comment",
+						"repository":"owner01/repo01",
+						"repository_owner":"owner01",
+						"issue":{"number":123,"pull_request":{}},
+						"event":{"comment":{"body":"///terraform plan"}}
+					}`),
+					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
+				}
+
+				expected.Stdout = e2ehelpers.NewLines(
+					"",
+					"*************",
+					"*************",
+					"*************",
+					"==== CMD ====",
+					fmt.Sprintf(
+						"%s -chdir=%s/ghrepo01/case01/roots/r1 init -no-color",
+						fcmd.DirPath().FilePathCommand(),
+						dirPathTestdata,
+					),
+					"==== OUT ====",
+					"this is terraform command stdout",
+					"==== END ====",
+					"exit with 0",
+					"",
+					"",
+					"*************",
+					"*************",
+					"*************",
+					"==== CMD ====",
+					fmt.Sprintf(
+						"%s -chdir=%s/ghrepo01/case01/roots/r1 plan -no-color -detailed-exitcode",
+						fcmd.DirPath().FilePathCommand(),
+						dirPathTestdata,
+					),
+					"==== OUT ====",
+					"this is terraform command stdout",
+					"==== END ====",
+					"exit with 0",
+					"",
+					"",
+					"*************",
+					"*************",
+					"*************",
+					"==== CMD ====",
+					fmt.Sprintf(
+						"%s -chdir=%s/ghrepo01/case01/roots/r2 init -no-color",
+						fcmd.DirPath().FilePathCommand(),
+						dirPathTestdata,
+					),
+					"==== OUT ====",
+					"this is terraform command stdout",
+					"==== END ====",
+					"exit with 0",
+					"",
+					"",
+					"*************",
+					"*************",
+					"*************",
+					"==== CMD ====",
+					fmt.Sprintf(
+						"%s -chdir=%s/ghrepo01/case01/roots/r2 plan -no-color -detailed-exitcode",
+						fcmd.DirPath().FilePathCommand(),
+						dirPathTestdata,
+					),
+					"==== OUT ====",
+					"this is terraform command stdout",
+					"==== END ====",
+					"exit with 0",
+					"",
+					"",
+					"*************",
+					"*************",
+					"*************",
+					"==== CMD ====",
+					fmt.Sprintf(
+						"%s -chdir=%s/ghrepo01/case01/roots/r3 init -no-color",
+						fcmd.DirPath().FilePathCommand(),
+						dirPathTestdata,
+					),
+					"==== OUT ====",
+					"this is terraform command stdout",
+					"==== END ====",
+					"exit with 0",
+					"",
+					"",
+					"*************",
+					"*************",
+					"*************",
+					"==== CMD ====",
+					fmt.Sprintf(
+						"%s -chdir=%s/ghrepo01/case01/roots/r3 plan -no-color -detailed-exitcode",
+						fcmd.DirPath().FilePathCommand(),
+						dirPathTestdata,
+					),
+					"==== OUT ====",
+					"this is terraform command stdout",
+					"==== END ====",
+					"exit with 0",
+					"",
+					"",
+				)
+
+				expected.Stderr = e2ehelpers.NewLines(
+					"this is terraform command stderr",
+					"this is terraform command stderr",
+					"this is terraform command stderr",
+					"this is terraform command stderr",
+					"this is terraform command stderr",
+					"this is terraform command stderr",
+				)
 			},
-			Setup: func(t *testing.T, testID e2ehelpers.TestID) error {
-				if err := smockerClient.PostMocks(
+		},
+		{
+			Desc: "ok - [issue comment] - terraform apply - with empty diff",
+			Setup: func(
+				t *testing.T,
+				testID e2ehelpers.TestID,
+				input *e2ehelpers.CLITestCaseV2Input,
+				expected *e2ehelpers.CLITestCaseV2Expected,
+			) {
+				require.NoError(t, smockerClient.PostMocks(
 					types.Mocks{
 						{
 							Request: types.MockRequest{
@@ -264,377 +530,117 @@ func TestTerraformOnGithubAction(t *testing.T) {
 								},
 								Body: `[
 								    {"filename":"hoge/fuga.go"},
-								    {"filename":"case01/roots/r1/main.tf"},
-								    {"filename":"case01/roots/r2/.terraform.lock.hcl"},
-								    {"filename":"case01/commons/r3m1m1/main.tf"}
+								    {"filename":"case01/roots/r1/main.tf"}
 								]`,
 							},
 						},
 					},
 					false,
-				); err != nil {
-					return err
-				}
+				))
 
-				if err := externalCommandFaker.Add(&e2ehelpers.ExternalCommandBehavior{
-					FilePath: "/tmp/terraform001.sh",
-					Stdout:   "this is terraform command stdout",
-					Stderr:   "this is terraform command stderr",
-				}); err != nil {
-					return err
-				}
+				fcmd := commandFaker.AddInTest(t, domains.Behaviors{
+					{
+						Type: domains.BehaviorTypeStdoutStderrExitCode,
+						BehaviorStdoutStderrExitCode: &domains.BehaviorStdoutStderrExitCode{
+							Stdout: "this is terraform command stdout\n",
+							Stderr: "this is terraform command stderr\n",
+						},
+					},
+					{
+						Type: domains.BehaviorTypeStdoutStderrExitCode,
+						BehaviorStdoutStderrExitCode: &domains.BehaviorStdoutStderrExitCode{
+							Stdout: "this is terraform command stdout\n",
+							Stderr: "this is terraform command stderr\n",
+						},
+					},
+					{
+						Type: domains.BehaviorTypeStdoutStderrExitCode,
+						BehaviorStdoutStderrExitCode: &domains.BehaviorStdoutStderrExitCode{
+							Stdout: "this is terraform command stdout\n",
+							Stderr: "this is terraform command stderr\n",
+						},
+					},
+				})
 
-				return nil
-			},
-			ExpectedStdout: e2ehelpers.NewLines(
-				"",
-				"*************",
-				"*************",
-				"*************",
-				"==== CMD ====",
-				fmt.Sprintf(
-					"/tmp/terraform001.sh -chdir=%s/ghrepo01/case01/roots/r1 init -no-color",
-					dirPathTestdata,
-				),
-				"==== OUT ====",
-				"this is terraform command stdout",
-				"==== END ====",
-				"exit with 0",
-				"",
-				"",
-				"*************",
-				"*************",
-				"*************",
-				"==== CMD ====",
-				fmt.Sprintf(
-					"/tmp/terraform001.sh -chdir=%s/ghrepo01/case01/roots/r1 plan -no-color -detailed-exitcode",
-					dirPathTestdata,
-				),
-				"==== OUT ====",
-				"this is terraform command stdout",
-				"==== END ====",
-				"exit with 0",
-				"",
-				"",
-				"*************",
-				"*************",
-				"*************",
-				"==== CMD ====",
-				fmt.Sprintf(
-					"/tmp/terraform001.sh -chdir=%s/ghrepo01/case01/roots/r2 init -no-color",
-					dirPathTestdata,
-				),
-				"==== OUT ====",
-				"this is terraform command stdout",
-				"==== END ====",
-				"exit with 0",
-				"",
-				"",
-				"*************",
-				"*************",
-				"*************",
-				"==== CMD ====",
-				fmt.Sprintf(
-					"/tmp/terraform001.sh -chdir=%s/ghrepo01/case01/roots/r2 plan -no-color -detailed-exitcode",
-					dirPathTestdata,
-				),
-				"==== OUT ====",
-				"this is terraform command stdout",
-				"==== END ====",
-				"exit with 0",
-				"",
-				"",
-				"*************",
-				"*************",
-				"*************",
-				"==== CMD ====",
-				fmt.Sprintf(
-					"/tmp/terraform001.sh -chdir=%s/ghrepo01/case01/roots/r3 init -no-color",
-					dirPathTestdata,
-				),
-				"==== OUT ====",
-				"this is terraform command stdout",
-				"==== END ====",
-				"exit with 0",
-				"",
-				"",
-				"*************",
-				"*************",
-				"*************",
-				"==== CMD ====",
-				fmt.Sprintf(
-					"/tmp/terraform001.sh -chdir=%s/ghrepo01/case01/roots/r3 plan -no-color -detailed-exitcode",
-					dirPathTestdata,
-				),
-				"==== OUT ====",
-				"this is terraform command stdout",
-				"==== END ====",
-				"exit with 0",
-				"",
-				"",
-			),
-			ExpectedStderr: e2ehelpers.NewLines(
-				"this is terraform command stderr",
-				"this is terraform command stderr",
-				"this is terraform command stderr",
-				"this is terraform command stderr",
-				"this is terraform command stderr",
-				"this is terraform command stderr",
-			),
-		},
-		{
-			Desc: "ok - [issue comment] - terraform apply - with empty diff",
-			Envs: append(
-				envs,
-				"GITHUB_TOKEN=foo",
-				"FILE_PATH_TERRAFORM=/tmp/terraform02.sh",
-			),
-			Args: []string{
-				"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-				"-p", googleCloudProjectID,
-				"-github-context", e2ehelpers.MinifyJSONString(`{
+				input.Envs = append(
+					envs,
+					"GITHUB_TOKEN=foo",
+					fmt.Sprintf("FILE_PATH_TERRAFORM=%s", fcmd.DirPath().FilePathCommand()),
+				)
+				input.Args = []string{
+					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
+					"-p", googleCloudProjectID,
+					"-github-context", e2ehelpers.MinifyJSONString(`{
 				    "event_name":"issue_comment",
 					"repository":"owner01/repo01",
 					"repository_owner":"owner01",
 					"issue":{"number":123,"pull_request":{}},
 					"event":{"comment":{"body":"///terraform apply"}}
 				}`),
-				"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
-			},
-			Setup: func(t *testing.T, testID e2ehelpers.TestID) error {
-				if err := smockerClient.PostMocks(
-					types.Mocks{
-						{
-							Request: types.MockRequest{
-								Method: types.StringMatcher{
-									Matcher: "ShouldEqual",
-									Value:   "GET",
-								},
-								Path: types.StringMatcher{
-									Matcher: "ShouldEqual",
-									Value:   "/repos/owner01/repo01/pulls/123/files",
-								},
-								QueryParams: types.MultiMapMatcher{
-									"page": types.StringMatcherSlice{
-										{Matcher: "ShouldEqual", Value: "1"},
-									},
-									"per_page": types.StringMatcherSlice{
-										{Matcher: "ShouldEqual", Value: "100"},
-									},
-								},
-								Headers: types.MultiMapMatcher{
-									"E2e-Testid": {
-										{
-											Matcher: "ShouldEqual",
-											Value:   testID.String(),
-										},
-									},
-								},
-							},
-							Response: &types.MockResponse{
-								Status: http.StatusCreated,
-								Headers: types.MapStringSlice{
-									"Content-Type": types.StringSlice{"application/json"},
-								},
-								Body: `[
-								    {"filename":"hoge/fuga.go"},
-								    {"filename":"case01/roots/r1/main.tf"}
-								]`,
-							},
-						},
-					},
-					false,
-				); err != nil {
-					return err
+					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
 				}
 
-				if err := externalCommandFaker.Add(&e2ehelpers.ExternalCommandBehavior{
-					FilePath: "/tmp/terraform02.sh",
-					Stdout:   "this is terraform command stdout",
-					Stderr:   "this is terraform command stderr",
-				}); err != nil {
-					return err
-				}
+				expected.Stdout = e2ehelpers.NewLines(
+					"",
+					"*************",
+					"*************",
+					"*************",
+					"==== CMD ====",
+					fmt.Sprintf(
+						"%s -chdir=%s/ghrepo01/case01/roots/r1 init -no-color",
+						fcmd.DirPath().FilePathCommand(),
+						dirPathTestdata,
+					),
+					"==== OUT ====",
+					"this is terraform command stdout",
+					"==== END ====",
+					"exit with 0",
+					"",
+					"",
+					"*************",
+					"*************",
+					"*************",
+					"==== CMD ====",
+					fmt.Sprintf(
+						"%s -chdir=%s/ghrepo01/case01/roots/r1 plan -no-color -detailed-exitcode",
+						fcmd.DirPath().FilePathCommand(),
+						dirPathTestdata,
+					),
+					"==== OUT ====",
+					"this is terraform command stdout",
+					"==== END ====",
+					"exit with 0",
+					"",
+					"",
+					"*************",
+					"*************",
+					"*************",
+					"==== CMD ====",
+					fmt.Sprintf(
+						"%s -chdir=%s/ghrepo01/case01/roots/r1 apply -no-color -auto-approve",
+						fcmd.DirPath().FilePathCommand(),
+						dirPathTestdata,
+					),
+					"==== OUT ====",
+					"this is terraform command stdout",
+					"==== END ====",
+					"exit with 0",
+					"",
+					"",
+				)
 
-				return nil
+				expected.Stderr = e2ehelpers.NewLines(
+					"this is terraform command stderr",
+					"this is terraform command stderr",
+					"this is terraform command stderr",
+				)
 			},
-			ExpectedStdout: e2ehelpers.NewLines(
-				"",
-				"*************",
-				"*************",
-				"*************",
-				"==== CMD ====",
-				fmt.Sprintf(
-					"/tmp/terraform02.sh -chdir=%s/ghrepo01/case01/roots/r1 init -no-color",
-					dirPathTestdata,
-				),
-				"==== OUT ====",
-				"this is terraform command stdout",
-				"==== END ====",
-				"exit with 0",
-				"",
-				"",
-				"*************",
-				"*************",
-				"*************",
-				"==== CMD ====",
-				fmt.Sprintf(
-					"/tmp/terraform02.sh -chdir=%s/ghrepo01/case01/roots/r1 plan -no-color -detailed-exitcode",
-					dirPathTestdata,
-				),
-				"==== OUT ====",
-				"this is terraform command stdout",
-				"==== END ====",
-				"exit with 0",
-				"",
-				"",
-				"*************",
-				"*************",
-				"*************",
-				"==== CMD ====",
-				fmt.Sprintf(
-					"/tmp/terraform02.sh -chdir=%s/ghrepo01/case01/roots/r1 init -no-color",
-					dirPathTestdata,
-				),
-				"==== OUT ====",
-				"this is terraform command stdout",
-				"==== END ====",
-				"exit with 0",
-				"",
-				"",
-				"*************",
-				"*************",
-				"*************",
-				"==== CMD ====",
-				fmt.Sprintf(
-					"/tmp/terraform02.sh -chdir=%s/ghrepo01/case01/roots/r1 apply -no-color -auto-approve",
-					dirPathTestdata,
-				),
-				"==== OUT ====",
-				"this is terraform command stdout",
-				"==== END ====",
-				"exit with 0",
-				"",
-				"",
-			),
-			ExpectedStderr: e2ehelpers.NewLines(
-				"this is terraform command stderr",
-				"this is terraform command stderr",
-				"this is terraform command stderr",
-				"this is terraform command stderr",
-			),
-		},
-		{
-			Desc: "ok - [issue comment] - terraform plan - with non-empty diff",
-			Envs: append(
-				envs,
-				"GITHUB_TOKEN=foo",
-				"FILE_PATH_TERRAFORM=/tmp/terraform001.sh",
-			),
-			Args: []string{
-				"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-				"-p", googleCloudProjectID,
-				"-github-context", e2ehelpers.MinifyJSONString(`{
-				    "event_name":"issue_comment",
-					"repository":"owner01/repo01",
-					"repository_owner":"owner01",
-					"issue":{"number":123,"pull_request":{}},
-					"event":{"comment":{"body":"///terraform plan"}}
-				}`),
-				"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
-			},
-			Setup: func(t *testing.T, testID e2ehelpers.TestID) error {
-				if err := smockerClient.PostMocks(
-					types.Mocks{
-						{
-							Request: types.MockRequest{
-								Method: types.StringMatcher{
-									Matcher: "ShouldEqual",
-									Value:   "GET",
-								},
-								Path: types.StringMatcher{
-									Matcher: "ShouldEqual",
-									Value:   "/repos/owner01/repo01/pulls/123/files",
-								},
-								QueryParams: types.MultiMapMatcher{
-									"page": types.StringMatcherSlice{
-										{Matcher: "ShouldEqual", Value: "1"},
-									},
-									"per_page": types.StringMatcherSlice{
-										{Matcher: "ShouldEqual", Value: "100"},
-									},
-								},
-								Headers: types.MultiMapMatcher{
-									"E2e-Testid": {
-										{
-											Matcher: "ShouldEqual",
-											Value:   testID.String(),
-										},
-									},
-								},
-							},
-							Response: &types.MockResponse{
-								Status: http.StatusCreated,
-								Headers: types.MapStringSlice{
-									"Content-Type": types.StringSlice{"application/json"},
-								},
-								Body: `[
-								    {"filename":"case01/roots/r1/main.tf"}
-								]`,
-							},
-						},
-					},
-					false,
-				); err != nil {
-					return err
-				}
-
-				if err := externalCommandFaker.Add(&e2ehelpers.ExternalCommandBehavior{
-					FilePath: "/tmp/terraform001.sh",
-					Stdout:   "this is terraform command stdout",
-					ExitCode: 2,
-				}); err != nil {
-					return err
-				}
-
-				return nil
-			},
-			ExpectedStdout: e2ehelpers.NewLines(
-				"",
-				"*************",
-				"*************",
-				"*************",
-				"==== CMD ====",
-				fmt.Sprintf(
-					"/tmp/terraform001.sh -chdir=%s/ghrepo01/case01/roots/r1 init -no-color",
-					dirPathTestdata,
-				),
-				"==== OUT ====",
-				"this is terraform command stdout",
-				"==== END ====",
-				"exit with 0",
-				"",
-				"",
-				"*************",
-				"*************",
-				"*************",
-				"==== CMD ====",
-				fmt.Sprintf(
-					"/tmp/terraform001.sh -chdir=%s/ghrepo01/case01/roots/r1 plan -no-color -detailed-exitcode",
-					dirPathTestdata,
-				),
-				"==== OUT ====",
-				"this is terraform command stdout",
-				"==== END ====",
-				"exit with 2",
-				"",
-				"",
-			),
-			ExpectedExitCode: 2,
 		},
 	}
 
 	for _, tC := range testCases {
-		tC.Run(t, filePathBin)
+		t.Run(tC.Desc, func(t *testing.T) {
+			tC.Run(t, filePathBin)
+		})
 	}
 }

@@ -140,17 +140,23 @@ func (t *impl) TerraformOnGithubAction(
 		return nil
 	}
 
-	planResults, err := t.businessLogic.TerraformPlan(ctx, modules)
-	if err != nil {
-		return terrors.Wrap(err)
-	}
+	for _, module := range modules {
+		if err := t.businessLogic.TerraformInit(ctx, module); err != nil {
+			return terrors.Wrap(err)
+		}
 
-	if arg.PlanOnly {
-		return nil
-	}
+		planResult, err := t.businessLogic.TerraformPlan(ctx, module)
+		if err != nil {
+			return terrors.Wrap(err)
+		}
 
-	if _, err := t.businessLogic.TerraformApply(ctx, planResults.ModulesApplied()); err != nil {
-		return terrors.Wrap(err)
+		if arg.PlanOnly {
+			continue
+		}
+
+		if _, err := t.businessLogic.TerraformApply(ctx, planResult.Module); err != nil {
+			return terrors.Wrap(err)
+		}
 	}
 
 	return nil

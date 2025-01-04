@@ -9,25 +9,27 @@ import (
 
 type DirPathFakeCommand string
 
-func (t *DirPathFakeCommand) String() string {
-	return string(*t)
+func (t DirPathFakeCommand) String() string {
+	return string(t)
 }
 
-func (t *DirPathFakeCommand) FilePathCommand() string {
-	return fmt.Sprintf("%s/cmd", *t)
+func (t DirPathFakeCommand) FilePathCommand() string {
+	return fmt.Sprintf("%s/cmd", t)
 }
 
-func (t *DirPathFakeCommand) FilePathBehaviors() string {
-	return fmt.Sprintf("%s/behaviors.json", *t)
+func (t DirPathFakeCommand) FilePathBehaviors() string {
+	return fmt.Sprintf("%s/behaviors.json", t)
 }
 
-func (t *DirPathFakeCommand) FilePathState() string {
-	return fmt.Sprintf("%s/state.json", *t)
+func (t DirPathFakeCommand) FilePathState() string {
+	return fmt.Sprintf("%s/state.json", t)
 }
 
-func (t *DirPathFakeCommand) FilePathProcessing() string {
-	return fmt.Sprintf("%s/processing", *t)
+func (t DirPathFakeCommand) FilePathProcessing() string {
+	return fmt.Sprintf("%s/processing", t)
 }
+
+type DirPathFakeCommands []DirPathFakeCommand
 
 type FakeCommand struct {
 	filePathFakeCMD string

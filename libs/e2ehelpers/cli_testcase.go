@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Deprecated: use [e2ehelper.CLITestCaseV2]
 type CLITestCase struct {
 	Desc             string
 	Envs             []string
@@ -26,6 +27,7 @@ type CLITestCase struct {
 	Assertions       func(t *testing.T)
 }
 
+// Deprecated: use [e2ehelper.CLITestCaseV2]
 func (c *CLITestCase) Run(
 	tt *testing.T,
 	filePathBin string,
