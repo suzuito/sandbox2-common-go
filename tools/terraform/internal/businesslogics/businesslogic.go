@@ -124,7 +124,7 @@ func (t *impl) ParseBaseDir(
 ) (module.Modules, error) {
 	modules := module.Modules{}
 
-	if err := filepath.Walk(basePath, func(path string, info fs.FileInfo, err error) error {
+	if err := filepath.Walk(basePath, func(path string, info fs.FileInfo, _ error) error {
 		if !info.IsDir() {
 			return nil
 		}

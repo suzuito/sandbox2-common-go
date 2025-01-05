@@ -18,70 +18,82 @@ func TestCheckTerraformRules(t *testing.T) {
 		panic(err)
 	}
 
-	testCases := []e2ehelpers.CLITestCase{
+	testCases := []e2ehelpers.CLITestCaseV2{
 		{
-			Desc:             `ng - -d is required`,
-			Args:             []string{},
-			ExpectedExitCode: 1,
-			ExpectedStderr:   "-d is required",
+			Desc: `ng - -d is required`,
+			Setup: func(t *testing.T, testID e2ehelpers.TestID, input *e2ehelpers.CLITestCaseV2Input, expected *e2ehelpers.CLITestCaseV2Expected) {
+				expected.ExitCode = 1
+				expected.Stderr = "-d is required"
+			},
 		},
 		{
 			Desc: `ok - some rule violations exist`,
-			Args: []string{
-				"-d", fmt.Sprintf("%s/case001", dirPathTestdata),
+			Setup: func(t *testing.T, testID e2ehelpers.TestID, input *e2ehelpers.CLITestCaseV2Input, expected *e2ehelpers.CLITestCaseV2Expected) {
+				input.Args = []string{
+					"-d", fmt.Sprintf("%s/case001", dirPathTestdata),
+				}
+
+				expected.ExitCode = 5
+				expected.Stdout = strings.Join(
+					[]string{
+						fmt.Sprintf(`resource terraform.backend."gcs" not found (%s/case001/mods/ng001)`, dirPathTestdata),
+						"  expected: true",
+						"  actual: false",
+						fmt.Sprintf(`resource provider."google" not found (%s/case001/mods/ng002)`, dirPathTestdata),
+						"  expected: true",
+						"  actual: false",
+						fmt.Sprintf("invalid terraform.backend.\"gcs\".bucket (%s/case001/mods/ng003)", dirPathTestdata),
+						"  expected: base-999-terraform",
+						"  actual: hoge-terraform",
+						fmt.Sprintf("invalid terraform.backend.\"gcs\".prefix (%s/case001/mods/ng004)", dirPathTestdata),
+						"  expected: mods/ng004",
+						"  actual: hoge\n",
+					},
+					"\n",
+				)
+				expected.Stderr = strings.Join(
+					[]string{
+						"not pass\n",
+					},
+					"\n",
+				)
 			},
-			ExpectedExitCode: 5,
-			ExpectedStdout: strings.Join(
-				[]string{
-					fmt.Sprintf(`resource terraform.backend."gcs" not found (%s/case001/mods/ng001)`, dirPathTestdata),
-					"  expected: true",
-					"  actual: false",
-					fmt.Sprintf(`resource provider."google" not found (%s/case001/mods/ng002)`, dirPathTestdata),
-					"  expected: true",
-					"  actual: false",
-					fmt.Sprintf("invalid terraform.backend.\"gcs\".bucket (%s/case001/mods/ng003)", dirPathTestdata),
-					"  expected: base-999-terraform",
-					"  actual: hoge-terraform",
-					fmt.Sprintf("invalid terraform.backend.\"gcs\".prefix (%s/case001/mods/ng004)", dirPathTestdata),
-					"  expected: mods/ng004",
-					"  actual: hoge\n",
-				},
-				"\n",
-			),
-			ExpectedStderr: strings.Join(
-				[]string{
-					"not pass\n",
-				},
-				"\n",
-			),
 		},
 		{
 			Desc: `ok - no rule violations`,
-			Args: []string{
-				"-d", fmt.Sprintf("%s/case002", dirPathTestdata),
+			Setup: func(t *testing.T, testID e2ehelpers.TestID, input *e2ehelpers.CLITestCaseV2Input, expected *e2ehelpers.CLITestCaseV2Expected) {
+				input.Args = []string{
+					"-d", fmt.Sprintf("%s/case002", dirPathTestdata),
+				}
 			},
 		},
 		{
 			Desc: `ng - set no existing dir as -d opt value`,
-			Args: []string{
-				"-d", fmt.Sprintf("%s/caseXXX", dirPathTestdata),
+			Setup: func(t *testing.T, testID e2ehelpers.TestID, input *e2ehelpers.CLITestCaseV2Input, expected *e2ehelpers.CLITestCaseV2Expected) {
+				input.Args = []string{
+					"-d", fmt.Sprintf("%s/caseXXX", dirPathTestdata),
+				}
+				expected.ExitCode = 10
+				expected.Stderr = strings.Join(
+					[]string{
+						fmt.Sprintf("%s/caseXXX does not exist", dirPathTestdata),
+					},
+					"\n",
+				)
 			},
-			ExpectedExitCode: 10,
-			ExpectedStderr: strings.Join(
-				[]string{
-					fmt.Sprintf("%s/caseXXX does not exist", dirPathTestdata),
-				},
-				"\n",
-			),
 		},
 		{
 			Desc: `ok - broken hcl file is ignored`,
-			Args: []string{
-				"-d", fmt.Sprintf("%s/case003", dirPathTestdata),
+			Setup: func(t *testing.T, testID e2ehelpers.TestID, input *e2ehelpers.CLITestCaseV2Input, expected *e2ehelpers.CLITestCaseV2Expected) {
+				input.Args = []string{
+					"-d", fmt.Sprintf("%s/case003", dirPathTestdata),
+				}
 			},
 		},
 	}
 	for _, tC := range testCases {
-		tC.Run(t, filePathBin)
+		t.Run(tC.Desc, func(t *testing.T) {
+			tC.Run(t, filePathBin)
+		})
 	}
 }

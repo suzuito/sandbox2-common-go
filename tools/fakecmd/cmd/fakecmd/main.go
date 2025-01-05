@@ -1,13 +1,11 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"strings"
 
@@ -63,10 +61,8 @@ func getLock(
 }
 
 func main1() code {
-
-	ctx := context.Background()
-	ctx, stop := signal.NotifyContext(ctx, os.Interrupt)
-	defer stop()
+	// ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	// defer stop()
 
 	dirPath := domains.DirPathFakeCommand(filepath.Dir(os.Args[0]))
 
@@ -129,8 +125,8 @@ func main1() code {
 			return codeFakeCMDError
 		}
 		defer closeState()
-		fmt.Fprintf(os.Stdout, behavior.BehaviorStdoutStderrExitCode.Stdout)
-		fmt.Fprintf(os.Stderr, behavior.BehaviorStdoutStderrExitCode.Stderr)
+		fmt.Fprint(os.Stdout, behavior.BehaviorStdoutStderrExitCode.Stdout)
+		fmt.Fprint(os.Stderr, behavior.BehaviorStdoutStderrExitCode.Stderr)
 		return code(behavior.BehaviorStdoutStderrExitCode.ExitCode)
 	default:
 		// unknown type

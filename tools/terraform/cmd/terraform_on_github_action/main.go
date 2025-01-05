@@ -48,6 +48,7 @@ func main() {
 	flag.StringVar(&projectID, "p", "", "Google Cloud Project ID")
 	flag.StringVar(&githubContextJSON, "github-context", "", "Context object json of Github Action https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs#github-context")
 	flag.StringVar(&dirPathRootGit, "git-rootdir", "", "Base directory path of git")
+	flag.Usage = usage
 
 	flag.Parse()
 

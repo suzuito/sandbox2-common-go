@@ -22,7 +22,7 @@ func TestA(t *testing.T) {
 	)
 
 	commandFaker := domains.MustByEnv()
-	defer commandFaker.Cleanup()
+	defer commandFaker.Cleanup() //nolint:errcheck
 
 	envs := []string{
 		"GITHUB_HTTP_CLIENT_FAKE_SCHEME=http",
@@ -412,6 +412,8 @@ func TestA(t *testing.T) {
 		},
 	}
 	for _, tC := range testCases {
-		tC.Run(t, filePathBin)
+		t.Run(tC.Desc, func(t *testing.T) {
+			tC.Run(t, filePathBin)
+		})
 	}
 }

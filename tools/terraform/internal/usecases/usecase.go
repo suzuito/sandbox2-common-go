@@ -99,6 +99,10 @@ func (t *impl) TerraformOnGithubAction(
 
 	modules = slices.Collect(utils.Filter(
 		func(m *module.Module) bool {
+			if !m.IsRoot {
+				return true
+			}
+
 			pid, exists := m.GoogleProjectID()
 			if !exists {
 				return false
@@ -109,7 +113,8 @@ func (t *impl) TerraformOnGithubAction(
 		slices.Values(modules),
 	))
 
-	if arg.TargetType == terraformexe.ForOnlyChageFiles {
+	switch arg.TargetType {
+	case terraformexe.ForOnlyChageFiles:
 		paths, err := t.businessLogic.FetchPathsChangedInPR(
 			ctx,
 			arg.GitHubOwner,
@@ -129,12 +134,14 @@ func (t *impl) TerraformOnGithubAction(
 		if err != nil {
 			return terrors.Wrap(err)
 		}
+	case terraformexe.ForAllFiles:
+		modules = slices.Collect(utils.Filter(
+			func(m *module.Module) bool { return m.IsRoot },
+			slices.Values(modules),
+		))
+	default:
+		return terrors.Errorf("invalid target type %d", arg.TargetType)
 	}
-
-	modules = slices.Collect(utils.Filter(
-		func(m *module.Module) bool { return m.IsRoot },
-		slices.Values(modules),
-	))
 
 	if len(modules) <= 0 {
 		fmt.Printf("no file changed in PR: %d\n", arg.GitHubPullRequestNumber)
