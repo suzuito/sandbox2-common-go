@@ -251,7 +251,7 @@ func TestA(t *testing.T) {
 				}
 
 				expected.ExitCode = 2
-				expected.Stdout = e2ehelpers.NewLines(
+				expected.Stderr = e2ehelpers.NewLines(
 					"no existing git versions",
 				)
 			},
