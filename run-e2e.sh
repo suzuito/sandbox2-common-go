@@ -23,6 +23,7 @@ mkdir -p $2
 rm -f $2/*
 export GOCOVERDIR=$(realpath $2)
 
+go install ./tools/fakecmd/cmd/fakecmd/main.go
 export FILE_PATH_FAKECMD=$(go env GOPATH)/bin/fakecmd
 
 go test -count=1 -v $3
