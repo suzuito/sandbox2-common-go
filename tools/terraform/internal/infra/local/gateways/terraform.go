@@ -2,6 +2,7 @@ package gateways
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os/exec"
@@ -116,7 +117,12 @@ func (t *terraformGateway) run(
 	cmd.Stderr = t.stderr
 	cmd.Stdout = t.stdout
 	cmd.Env = append(cmd.Environ(), envs...)
-	cmd.Run()
+	if err := cmd.Run(); err != nil {
+		var exiterr *exec.ExitError
+		if !errors.As(err, &exiterr) {
+			return nil, terrors.Errorf("failed to cmd.Run: %w", err)
+		}
+	}
 	fmt.Fprintf(t.stdout, "==== END ====\n")
 	fmt.Fprintf(t.stdout, "exit with %d\n", cmd.ProcessState.ExitCode())
 	fmt.Fprintf(t.stdout, "\n")

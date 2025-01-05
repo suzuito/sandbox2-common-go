@@ -80,5 +80,16 @@ func NewTerraformExecutionArg(
 		}, true, nil
 	}
 
+	if githubContext.EventName == "workflow_dispatch" {
+		return &Arg{
+			TargetType:       ForAllFiles,
+			PlanOnly:         true,
+			GitHubOwner:      githubContext.RepositoryOwner,
+			GitHubRepository: githubContext.RepositoryName(),
+			GitHubRefName:    githubContext.RefName,
+			GitHubRefType:    githubContext.RefType,
+		}, true, nil
+	}
+
 	return nil, false, nil
 }

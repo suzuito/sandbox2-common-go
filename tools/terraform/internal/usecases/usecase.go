@@ -99,10 +99,6 @@ func (t *impl) TerraformOnGithubAction(
 
 	modules = slices.Collect(utils.Filter(
 		func(m *module.Module) bool {
-			if !m.IsRoot {
-				return true
-			}
-
 			pid, exists := m.GoogleProjectID()
 			if !exists {
 				return false
@@ -135,17 +131,24 @@ func (t *impl) TerraformOnGithubAction(
 		}
 	}
 
+	modules = slices.Collect(utils.Filter(
+		func(m *module.Module) bool { return m.IsRoot },
+		slices.Values(modules),
+	))
+
 	if len(modules) <= 0 {
 		fmt.Printf("no file changed in PR: %d\n", arg.GitHubPullRequestNumber)
 		return nil
 	}
 
-	diff := false
 	for _, module := range modules {
 		if err := t.businessLogic.TerraformInit(ctx, module); err != nil {
 			return terrors.Wrap(err)
 		}
+	}
 
+	diff := false
+	for _, module := range modules {
 		planResult, err := t.businessLogic.TerraformPlan(ctx, module)
 		if err != nil {
 			return terrors.Wrap(err)
@@ -172,7 +175,6 @@ func (t *impl) TerraformOnGithubAction(
 	return nil
 }
 
-// TODO UT書く
 func filterModulesByTargetAbsFilePaths(modules module.Modules, targetAbsFilePaths []string) (module.Modules, error) {
 	for _, f := range targetAbsFilePaths {
 		if !filepath.IsAbs(f) {
@@ -185,15 +187,12 @@ func filterModulesByTargetAbsFilePaths(modules module.Modules, targetAbsFilePath
 		modulesByAbsPath[m.AbsPath] = m
 	}
 
+	// source mod -> parent mod
 	moduleParentAbsPaths := map[module.ModulePath][]module.ModulePath{}
 	for _, mod := range modules {
 		for _, file := range mod.Files {
 			for _, moduleRef := range file.Modules {
-				source := filepath.Join(mod.AbsPath.String(), moduleRef.Source)
-				absSourceString, err := filepath.Abs(source)
-				if err != nil {
-					return nil, terrors.Errorf("failed to convert source.path to abs path: %s: %w", source, err)
-				}
+				absSourceString := filepath.Join(mod.AbsPath.String(), moduleRef.Source)
 				absSource := module.ModulePath(absSourceString)
 
 				if _, exists := moduleParentAbsPaths[absSource]; !exists {
@@ -218,6 +217,14 @@ func filterModulesByTargetAbsFilePaths(modules module.Modules, targetAbsFilePath
 			)...,
 		)
 	}
+
+	sort.Sort(filtered)
+	filtered = slices.CompactFunc(
+		filtered,
+		func(l *module.Module, r *module.Module) bool {
+			return l.AbsPath == r.AbsPath
+		},
+	)
 
 	return filtered, nil
 }
@@ -250,14 +257,6 @@ func search(
 		mods := search(modulesByAbsPath, moduleParentAbsPaths, parentPath)
 		r = append(r, mods...)
 	}
-
-	sort.Sort(r)
-	r = slices.CompactFunc(
-		r,
-		func(l *module.Module, r *module.Module) bool {
-			return l.AbsPath == r.AbsPath
-		},
-	)
 
 	return r
 }
