@@ -3,15 +3,20 @@ package usecases
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
+	"sort"
 
 	errordefcli "github.com/suzuito/sandbox2-common-go/libs/errordefs/cli"
 	"github.com/suzuito/sandbox2-common-go/libs/terrors"
+	"github.com/suzuito/sandbox2-common-go/libs/utils"
 	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/businesslogics"
-	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/module"
 	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/rule"
+	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/terraformexe"
+	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/terraformmodels/module"
 )
 
 type Usecase interface {
@@ -19,6 +24,13 @@ type Usecase interface {
 		ctx context.Context,
 		dirPathBase string,
 		rules rule.Rules,
+	) error
+	TerraformOnGithubAction(
+		ctx context.Context,
+		dirPathBase string,
+		dirPathRootGit string,
+		projectID string,
+		arg *terraformexe.Arg,
 	) error
 }
 
@@ -42,10 +54,10 @@ func (t *impl) CheckTerraformRules(
 			return nil
 		}
 
-		module, err := t.businessLogic.ParseDir(ctx, path)
+		module, ok, err := t.businessLogic.ParseDir(ctx, path)
 		if err != nil {
 			return terrors.Errorf("failed to parse dir: %w", err)
-		} else if len(module.Files) <= 0 {
+		} else if !ok {
 			return nil
 		}
 
@@ -71,6 +83,189 @@ func (t *impl) CheckTerraformRules(
 	}
 
 	return nil
+}
+
+func (t *impl) TerraformOnGithubAction(
+	ctx context.Context,
+	dirPathBase string,
+	dirPathRootGit string,
+	projectID string,
+	arg *terraformexe.Arg,
+) error {
+	modules, err := t.businessLogic.ParseBaseDir(ctx, dirPathBase)
+	if err != nil {
+		return terrors.Wrap(err)
+	}
+
+	modules = slices.Collect(utils.Filter(
+		func(m *module.Module) bool {
+			if !m.IsRoot {
+				return true
+			}
+
+			pid, exists := m.GoogleProjectID()
+			if !exists {
+				return false
+			}
+
+			return pid == projectID
+		},
+		slices.Values(modules),
+	))
+
+	switch arg.TargetType {
+	case terraformexe.ForOnlyChageFiles:
+		paths, err := t.businessLogic.FetchPathsChangedInPR(
+			ctx,
+			arg.GitHubOwner,
+			arg.GitHubRepository,
+			arg.GitHubPullRequestNumber,
+		)
+		if err != nil {
+			return terrors.Wrap(err)
+		}
+
+		absPaths := make([]string, 0, len(paths))
+		for _, p := range paths {
+			absPaths = append(absPaths, filepath.Join(dirPathRootGit, p))
+		}
+
+		modules, err = filterModulesByTargetAbsFilePaths(modules, absPaths)
+		if err != nil {
+			return terrors.Wrap(err)
+		}
+	case terraformexe.ForAllFiles:
+		modules = slices.Collect(utils.Filter(
+			func(m *module.Module) bool { return m.IsRoot },
+			slices.Values(modules),
+		))
+	default:
+		return terrors.Errorf("invalid target type %d", arg.TargetType)
+	}
+
+	if len(modules) <= 0 {
+		fmt.Printf("no file changed in PR: %d\n", arg.GitHubPullRequestNumber)
+		return nil
+	}
+
+	for _, module := range modules {
+		if err := t.businessLogic.TerraformInit(ctx, module); err != nil {
+			return terrors.Wrap(err)
+		}
+	}
+
+	diff := false
+	for _, module := range modules {
+		planResult, err := t.businessLogic.TerraformPlan(ctx, module)
+		if err != nil {
+			return terrors.Wrap(err)
+		}
+
+		if planResult.IsPlanDiff {
+			diff = true
+		}
+	}
+
+	if arg.PlanOnly {
+		if diff {
+			return errordefcli.NewCLIError(2, "diff at `terraform plan`")
+		}
+		return nil
+	}
+
+	for _, module := range modules {
+		if _, err := t.businessLogic.TerraformApply(ctx, module); err != nil {
+			return terrors.Wrap(err)
+		}
+	}
+
+	return nil
+}
+
+func filterModulesByTargetAbsFilePaths(modules module.Modules, targetAbsFilePaths []string) (module.Modules, error) {
+	for _, f := range targetAbsFilePaths {
+		if !filepath.IsAbs(f) {
+			return nil, terrors.Errorf("target file '%s' is not abs path", f)
+		}
+	}
+
+	modulesByAbsPath := map[module.ModulePath]*module.Module{}
+	for _, m := range modules {
+		modulesByAbsPath[m.AbsPath] = m
+	}
+
+	// source mod -> parent mod
+	moduleParentAbsPaths := map[module.ModulePath][]module.ModulePath{}
+	for _, mod := range modules {
+		for _, file := range mod.Files {
+			for _, moduleRef := range file.Modules {
+				absSourceString := filepath.Join(mod.AbsPath.String(), moduleRef.Source)
+				absSource := module.ModulePath(absSourceString)
+
+				if _, exists := moduleParentAbsPaths[absSource]; !exists {
+					moduleParentAbsPaths[absSource] = []module.ModulePath{}
+				}
+				moduleParentAbsPaths[absSource] = append(moduleParentAbsPaths[absSource], mod.AbsPath)
+			}
+		}
+	}
+
+	filtered := module.Modules{}
+
+	for _, targetAbsFilePath := range targetAbsFilePaths {
+		targetAbsPath := module.ModulePath(filepath.Dir(targetAbsFilePath))
+
+		filtered = append(
+			filtered,
+			search(
+				modulesByAbsPath,
+				moduleParentAbsPaths,
+				targetAbsPath,
+			)...,
+		)
+	}
+
+	sort.Sort(filtered)
+	filtered = slices.CompactFunc(
+		filtered,
+		func(l *module.Module, r *module.Module) bool {
+			return l.AbsPath == r.AbsPath
+		},
+	)
+
+	return filtered, nil
+}
+
+func search(
+	modulesByAbsPath map[module.ModulePath]*module.Module,
+	moduleParentAbsPaths map[module.ModulePath][]module.ModulePath,
+	target module.ModulePath,
+) module.Modules {
+	targetMod, exists := modulesByAbsPath[target]
+	if !exists {
+		// targetAbsPath is not terraform module
+		return module.Modules{}
+	}
+
+	if targetMod.IsRoot {
+		// targetAbsPath is root moudle
+		return module.Modules{targetMod}
+	}
+
+	// targetAbsPaths is not root module
+	parentPaths, exists := moduleParentAbsPaths[target]
+	if !exists {
+		// targetAbsPath is unused module
+		return module.Modules{}
+	}
+
+	r := module.Modules{}
+	for _, parentPath := range parentPaths {
+		mods := search(modulesByAbsPath, moduleParentAbsPaths, parentPath)
+		r = append(r, mods...)
+	}
+
+	return r
 }
 
 func New(

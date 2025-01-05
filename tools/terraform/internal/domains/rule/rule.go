@@ -3,8 +3,8 @@ package rule
 import (
 	"context"
 
-	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/module"
 	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/reporter"
+	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/terraformmodels/module"
 )
 
 type Rule interface {

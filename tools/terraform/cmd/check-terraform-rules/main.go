@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/kelseyhightower/envconfig"
 	errordefcli "github.com/suzuito/sandbox2-common-go/libs/errordefs/cli"
 	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/rule"
 	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/inject"
@@ -20,6 +21,12 @@ func usage() {
 }
 
 func main() {
+	var env inject.Environment
+	if err := envconfig.Process("", &env); err != nil {
+		fmt.Fprintf(os.Stderr, "failed to load environment variable: %v\n", err)
+		os.Exit(1)
+	}
+
 	ctx := context.Background()
 
 	var dirPathBase string
@@ -34,7 +41,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	uc := inject.NewUsecase()
+	uc := inject.NewUsecase(&env)
 	if err := uc.CheckTerraformRules(
 		ctx,
 		dirPathBase,

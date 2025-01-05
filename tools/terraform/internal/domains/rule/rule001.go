@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 
 	"github.com/suzuito/sandbox2-common-go/libs/terrors"
-	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/module"
 	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/reporter"
+	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/terraformmodels/module"
 )
 
 type Rule001 struct{}
@@ -52,13 +52,13 @@ func (t *Rule001) Check(
 			}
 		}
 
-		dirPathRel, err := filepath.Rel(dirPathBaes, module.Path)
+		dirPathRel, err := filepath.Rel(dirPathBaes, module.AbsPath.String())
 		if err != nil {
 			return false, terrors.Errorf("invalid filepath.Rel: %w", err)
 		}
 
 		if !reporter.AssertTruef(
-			module.Path,
+			module.AbsPath.String(),
 			hasTerraformBackendGCS,
 			`resource terraform.backend."gcs" not found`,
 		) {
@@ -67,7 +67,7 @@ func (t *Rule001) Check(
 
 		if hasProviderGoogle && hasTerraformBackendGCS {
 			if !reporter.AssertEqualf(
-				module.Path,
+				module.AbsPath.String(),
 				fmt.Sprintf("%s-terraform", providerGoogleProject),
 				terraformBackendBucket,
 				"invalid terraform.backend.\"gcs\".bucket",
@@ -76,7 +76,7 @@ func (t *Rule001) Check(
 			}
 
 			if !reporter.AssertEqualf(
-				module.Path,
+				module.AbsPath.String(),
 				dirPathRel,
 				terraformBackendPrefix,
 				"invalid terraform.backend.\"gcs\".prefix",
@@ -86,7 +86,7 @@ func (t *Rule001) Check(
 		}
 
 		if !reporter.AssertTruef(
-			module.Path,
+			module.AbsPath.String(),
 			hasProviderGoogle,
 			`resource provider."google" not found`,
 		) {

@@ -1,9 +1,10 @@
 package file
 
 type File struct {
-	Path       string
+	AbsPath    string
 	Terraforms []*Terraform `hcl:"terraform,block"`
 	Providers  []*Provider  `hcl:"provider,block"`
+	Modules    []*ModuleRef `hcl:"module,block"`
 }
 
 type Terraform struct {
@@ -19,4 +20,9 @@ type TerraformBackend struct {
 type Provider struct {
 	Name    string `hcl:"name,label"`
 	Project string `hcl:"project"`
+}
+
+type ModuleRef struct {
+	Name   string `hcl:"name,label"`
+	Source string `hcl:"source"`
 }

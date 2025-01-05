@@ -34,10 +34,18 @@ test:
 e2e:
 	make e2e-release-increment-release-version
 	make e2e-terraform-check-terraform-rules
+	make e2e-terraform-terraform_on_github_action
+	make e2e-fakecmd-fakecmd
 
 .PHONY: test
 merge-test-report:
-	go tool covdata percent -i=cov,tools/release/cov/e2e/increment-release-version,tools/terraform/cov/e2e/check-terraform-rules -o=textfmt.txt
+	go tool covdata percent -i=\
+	cov\
+	,tools/release/cov/e2e/increment-release-version\
+	,tools/terraform/cov/e2e/check-terraform-rules\
+	,tools/terraform/cov/e2e/terraform_on_github_action\
+	,tools/fakecmd/cov/e2e/fakecmd\
+	 -o=textfmt.txt
 	go tool cover -html=textfmt.txt -o=gocov.html
 	go tool cover -func=textfmt.txt -o=gocovfunc.txt
 
@@ -62,3 +70,4 @@ test-ci:
 
 include Makefile.tools.release.mk
 include Makefile.tools.terraform.mk
+include Makefile.tools.fakecmd.mk
