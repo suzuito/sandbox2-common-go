@@ -43,7 +43,7 @@ func NewTerraformExecutionArg(
 
 		arg := Arg{
 			TargetType:              ForOnlyChageFiles,
-			GitHubOwner:             eventPayload.Repository.Owner.Name,
+			GitHubOwner:             eventPayload.Repository.Owner.Login,
 			GitHubRepository:        eventPayload.Repository.Name,
 			GitHubPullRequestNumber: eventPayload.Issue.Number,
 		}
@@ -66,7 +66,7 @@ func NewTerraformExecutionArg(
 		arg := Arg{
 			TargetType:       ForAllFiles,
 			PlanOnly:         true,
-			GitHubOwner:      eventPayload.Repository.Owner.Name,
+			GitHubOwner:      eventPayload.Repository.Owner.Login,
 			GitHubRepository: eventPayload.Repository.Name,
 		}
 
