@@ -2,6 +2,7 @@ package terraformexe
 
 import (
 	"encoding/json"
+	"os"
 
 	"github.com/suzuito/sandbox2-common-go/libs/terrors"
 	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/githubaction"
@@ -12,8 +13,6 @@ type Arg struct {
 	PlanOnly                bool
 	GitHubOwner             string
 	GitHubRepository        string
-	GitHubRefName           string
-	GitHubRefType           string
 	GitHubPullRequestNumber int
 }
 
@@ -27,68 +26,51 @@ const (
 func NewTerraformExecutionArg(
 	dirPathBase string,
 	projectID string,
-	githubContextJSON string,
+	eventName string,
+	eventPath string,
 ) (*Arg, bool, error) {
-	githubContext := githubaction.GitHubContext{}
-	if err := json.Unmarshal([]byte(githubContextJSON), &githubContext); err != nil {
-		return nil, false, terrors.Errorf("github context is invalid json: %s: %w", githubContextJSON, err)
+	eventPayloadBytes, err := os.ReadFile(eventPath)
+	if err != nil {
+		return nil, false, terrors.Wrap(err)
 	}
 
-	if githubContext.EventName == "issue_comment" &&
-		githubContext.Issue.PullRequest != nil &&
-		githubContext.Event.Comment != nil &&
-		githubContext.Event.Comment.Body == "///terraform plan" {
-		// comment on pull request
-		if githubContext.Issue == nil {
-			return nil, false, terrors.Errorf("invalid github context: issue is null")
+	switch eventName {
+	case "issue_comment":
+		eventPayload := githubaction.PayloadIssueComment{}
+		if err := json.Unmarshal(eventPayloadBytes, &eventPayload); err != nil {
+			return nil, false, terrors.Wrap(err)
 		}
 
-		return &Arg{
+		arg := Arg{
 			TargetType:              ForOnlyChageFiles,
-			PlanOnly:                true,
-			GitHubOwner:             githubContext.RepositoryOwner,
-			GitHubRepository:        githubContext.RepositoryName(),
-			GitHubPullRequestNumber: githubContext.Issue.Number,
-		}, true, nil
-	}
-
-	if githubContext.EventName == "issue_comment" &&
-		githubContext.Issue.PullRequest != nil &&
-		githubContext.Event.Comment != nil &&
-		githubContext.Event.Comment.Body == "///terraform apply" {
-		// comment on pull request
-		if githubContext.Issue == nil {
-			return nil, false, terrors.Errorf("invalid github context: issue is null")
+			GitHubOwner:             eventPayload.Repository.Owner.Name,
+			GitHubRepository:        eventPayload.Repository.Name,
+			GitHubPullRequestNumber: eventPayload.Issue.Number,
+		}
+		switch eventPayload.Comment.Body {
+		case "///terraform plan":
+			arg.PlanOnly = true
+		case "///terraform apply":
+			arg.PlanOnly = false
+		default:
+			return nil, false, nil
 		}
 
-		return &Arg{
-			TargetType:              ForOnlyChageFiles,
-			GitHubOwner:             githubContext.RepositoryOwner,
-			GitHubRepository:        githubContext.RepositoryName(),
-			GitHubPullRequestNumber: githubContext.Issue.Number,
-		}, true, nil
-	}
+		return &arg, true, nil
+	case "schedule", "workflow_dispatch":
+		eventPayload := githubaction.PayloadSchedule{}
+		if err := json.Unmarshal(eventPayloadBytes, &eventPayload); err != nil {
+			return nil, false, terrors.Wrap(err)
+		}
 
-	if githubContext.EventName == "schedule" {
-		return &Arg{
+		arg := Arg{
 			TargetType:       ForAllFiles,
 			PlanOnly:         true,
-			GitHubOwner:      githubContext.RepositoryOwner,
-			GitHubRepository: githubContext.RepositoryName(),
-			GitHubRefName:    githubContext.RefName,
-			GitHubRefType:    githubContext.RefType,
-		}, true, nil
-	}
+			GitHubOwner:      eventPayload.Repository.Owner.Name,
+			GitHubRepository: eventPayload.Repository.Name,
+		}
 
-	if githubContext.EventName == "workflow_dispatch" {
-		return &Arg{
-			TargetType:       ForAllFiles,
-			PlanOnly:         true,
-			GitHubOwner:      githubContext.RepositoryOwner,
-			GitHubRepository: githubContext.RepositoryName(),
-			GitHubRefName:    githubContext.RefName,
-			GitHubRefType:    githubContext.RefType,
-		}, true, nil
+		return &arg, true, nil
 	}
 
 	return nil, false, nil

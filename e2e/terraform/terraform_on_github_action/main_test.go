@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/smocker-dev/smocker/server/types"
 	"github.com/stretchr/testify/require"
 	"github.com/suzuito/sandbox2-common-go/libs/e2ehelpers"
@@ -39,7 +40,55 @@ func TestTerraformOnGithubAction(t *testing.T) {
 	commandFaker := domains.MustByEnv()
 	defer commandFaker.Cleanup() //nolint:errcheck
 
+	eventPath1 := fmt.Sprintf("/tmp/%s", uuid.NewString())
+	e2ehelpers.MustWriteFile(eventPath1, []byte(`{}`))
+	defer os.RemoveAll(eventPath1) //nolint:errcheck
+
 	testCases := []e2ehelpers.CLITestCaseV2{
+		{
+			Desc: "ng - -event-name is required",
+			Setup: func(
+				t *testing.T,
+				testID e2ehelpers.TestID,
+				input *e2ehelpers.CLITestCaseV2Input,
+				expected *e2ehelpers.CLITestCaseV2Expected,
+			) {
+				input.Envs = append(
+					envs,
+					"GITHUB_TOKEN=foo",
+				)
+				input.Args = []string{
+					"-event-path", "foo.json",
+					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
+					"-p", googleCloudProjectID,
+					"-git-rootdir", "dummygithubroot",
+				}
+				expected.ExitCode = 1
+				expected.Stderr = "-event-name is required"
+			},
+		},
+		{
+			Desc: "ng - -event-path is required",
+			Setup: func(
+				t *testing.T,
+				testID e2ehelpers.TestID,
+				input *e2ehelpers.CLITestCaseV2Input,
+				expected *e2ehelpers.CLITestCaseV2Expected,
+			) {
+				input.Envs = append(
+					envs,
+					"GITHUB_TOKEN=foo",
+				)
+				input.Args = []string{
+					"-event-name", "issue_comment",
+					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
+					"-p", googleCloudProjectID,
+					"-git-rootdir", "dummygithubroot",
+				}
+				expected.ExitCode = 1
+				expected.Stderr = "-event-path is required"
+			},
+		},
 		{
 			Desc: "ng - -d is required",
 			Setup: func(
@@ -53,8 +102,9 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					"GITHUB_TOKEN=foo",
 				)
 				input.Args = []string{
+					"-event-name", "issue_comment",
+					"-event-path", eventPath1,
 					"-p", googleCloudProjectID,
-					"-github-context", "{}",
 					"-git-rootdir", "dummygithubroot",
 				}
 				expected.ExitCode = 1
@@ -74,33 +124,13 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					"GITHUB_TOKEN=foo",
 				)
 				input.Args = []string{
+					"-event-name", "issue_comment",
+					"-event-path", eventPath1,
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-					"-github-context", "{}",
 					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
 				}
 				expected.ExitCode = 1
 				expected.Stderr = "-p is required"
-			},
-		},
-		{
-			Desc: "ng - -github-context is required",
-			Setup: func(
-				t *testing.T,
-				testID e2ehelpers.TestID,
-				input *e2ehelpers.CLITestCaseV2Input,
-				expected *e2ehelpers.CLITestCaseV2Expected,
-			) {
-				input.Envs = append(
-					envs,
-					"GITHUB_TOKEN=foo",
-				)
-				input.Args = []string{
-					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-					"-p", googleCloudProjectID,
-					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
-				}
-				expected.ExitCode = 1
-				expected.Stderr = "-github-context is required"
 			},
 		},
 		{
@@ -116,12 +146,58 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					"GITHUB_TOKEN=foo",
 				)
 				input.Args = []string{
+					"-event-name", "issue_comment",
+					"-event-path", eventPath1,
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
 					"-p", googleCloudProjectID,
-					"-github-context", "{}",
 				}
 				expected.ExitCode = 1
 				expected.Stderr = "-git-rootdir is required"
+			},
+		},
+		{
+			Desc: "ok - skipped - event name",
+			Setup: func(
+				t *testing.T,
+				testID e2ehelpers.TestID,
+				input *e2ehelpers.CLITestCaseV2Input,
+				expected *e2ehelpers.CLITestCaseV2Expected,
+			) {
+				input.Envs = append(
+					envs,
+					"GITHUB_TOKEN=foo",
+				)
+				input.Args = []string{
+					"-event-name", "ev",
+					"-event-path", eventPath1,
+					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
+					"-p", googleCloudProjectID,
+					"-git-rootdir", "dummygithubroot",
+				}
+				expected.Stdout = "skipped"
+			},
+		},
+		{
+			Desc: "ng - invalid event path",
+			Setup: func(
+				t *testing.T,
+				testID e2ehelpers.TestID,
+				input *e2ehelpers.CLITestCaseV2Input,
+				expected *e2ehelpers.CLITestCaseV2Expected,
+			) {
+				input.Envs = append(
+					envs,
+					"GITHUB_TOKEN=foo",
+				)
+				input.Args = []string{
+					"-event-name", "issue_comment",
+					"-event-path", "foo.json",
+					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
+					"-p", googleCloudProjectID,
+					"-git-rootdir", "dummygithubroot",
+				}
+				expected.ExitCode = 1
+				expected.Stderr = "open foo.json: no such file or directory"
 			},
 		},
 		{
@@ -137,9 +213,10 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					"GITHUB_TOKEN=foo",
 				)
 				input.Args = []string{
+					"-event-name", "issue_comment",
+					"-event-path", eventPath1,
 					"-d", fmt.Sprintf("%s/ghrepo01/caseXX", dirPathTestdata),
 					"-p", googleCloudProjectID,
-					"-github-context", "{}",
 					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
 				}
 				expected.ExitCode = 1
@@ -147,49 +224,6 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					"invalid base dir: %s/ghrepo01/caseXX: stat %s/ghrepo01/caseXX: no such file or directory",
 					dirPathTestdata, dirPathTestdata,
 				)
-			},
-		},
-		{
-			Desc: "ng - github context is invalid json",
-			Setup: func(
-				t *testing.T,
-				testID e2ehelpers.TestID,
-				input *e2ehelpers.CLITestCaseV2Input,
-				expected *e2ehelpers.CLITestCaseV2Expected,
-			) {
-				input.Envs = append(
-					envs,
-					"GITHUB_TOKEN=foo",
-				)
-				input.Args = []string{
-					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-					"-p", googleCloudProjectID,
-					"-github-context", "dummygithubcontext",
-					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
-				}
-				expected.ExitCode = 1
-				expected.Stderr = "github context is invalid json: dummygithubcontext: invalid character 'd' looking for beginning of value"
-			},
-		},
-		{
-			Desc: "ok - skipped github action event",
-			Setup: func(
-				t *testing.T,
-				testID e2ehelpers.TestID,
-				input *e2ehelpers.CLITestCaseV2Input,
-				expected *e2ehelpers.CLITestCaseV2Expected,
-			) {
-				input.Envs = append(
-					envs,
-					"GITHUB_TOKEN=foo",
-				)
-				input.Args = []string{
-					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-					"-p", googleCloudProjectID,
-					"-github-context", "{}",
-					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
-				}
-				expected.Stdout = "skipped"
 			},
 		},
 		// issue comment
@@ -206,15 +240,19 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					"GITHUB_TOKEN=foo",
 				)
 				input.Args = []string{
+					"-event-name", "issue_comment",
+					"-event-path", e2ehelpers.MustWriteFileAtRandomPath("/tmp", []byte(`{
+					    "comment": {"body": "///terraform plan"},
+						"issue": {"number":123, "pull_request":{}},
+						"repository":{
+						  "name": "repo01",
+						  "owner": {
+						    "name": "owner01"
+						  }
+						}
+					}`)),
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
 					"-p", googleCloudProjectID,
-					"-github-context", e2ehelpers.MinifyJSONString(`{
-							    "event_name":"issue_comment",
-								"repository":"owner01/repo01",
-								"repository_owner":"owner01",
-								"issue":{"number":123,"pull_request":{}},
-								"event":{"comment":{"body":"///terraform plan"}}
-							}`),
 					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
 				}
 
@@ -367,15 +405,19 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					fmt.Sprintf("FILE_PATH_TERRAFORM=%s", fcmd.DirPath().FilePathCommand()),
 				)
 				input.Args = []string{
+					"-event-name", "issue_comment",
+					"-event-path", e2ehelpers.MustWriteFileAtRandomPath("/tmp", []byte(`{
+					    "comment": {"body": "///terraform plan"},
+						"issue": {"number":123, "pull_request":{}},
+						"repository":{
+						  "name": "repo01",
+						  "owner": {
+						    "name": "owner01"
+						  }
+						}
+					}`)),
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
 					"-p", googleCloudProjectID,
-					"-github-context", e2ehelpers.MinifyJSONString(`{
-							    "event_name":"issue_comment",
-								"repository":"owner01/repo01",
-								"repository_owner":"owner01",
-								"issue":{"number":123,"pull_request":{}},
-								"event":{"comment":{"body":"///terraform plan"}}
-							}`),
 					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
 				}
 
@@ -559,15 +601,19 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					fmt.Sprintf("FILE_PATH_TERRAFORM=%s", fcmd.DirPath().FilePathCommand()),
 				)
 				input.Args = []string{
+					"-event-name", "issue_comment",
+					"-event-path", e2ehelpers.MustWriteFileAtRandomPath("/tmp", []byte(`{
+					    "comment": {"body": "///terraform plan"},
+						"issue": {"number":123, "pull_request":{}},
+						"repository":{
+						  "name": "repo01",
+						  "owner": {
+						    "name": "owner01"
+						  }
+						}
+					}`)),
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
 					"-p", googleCloudProjectID,
-					"-github-context", e2ehelpers.MinifyJSONString(`{
-							    "event_name":"issue_comment",
-								"repository":"owner01/repo01",
-								"repository_owner":"owner01",
-								"issue":{"number":123,"pull_request":{}},
-								"event":{"comment":{"body":"///terraform plan"}}
-							}`),
 					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
 				}
 
@@ -694,15 +740,19 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					fmt.Sprintf("FILE_PATH_TERRAFORM=%s", fcmd.DirPath().FilePathCommand()),
 				)
 				input.Args = []string{
+					"-event-name", "issue_comment",
+					"-event-path", e2ehelpers.MustWriteFileAtRandomPath("/tmp", []byte(`{
+					    "comment": {"body": "///terraform apply"},
+						"issue": {"number":123, "pull_request":{}},
+						"repository":{
+						  "name": "repo01",
+						  "owner": {
+						    "name": "owner01"
+						  }
+						}
+					}`)),
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
 					"-p", googleCloudProjectID,
-					"-github-context", e2ehelpers.MinifyJSONString(`{
-						    "event_name":"issue_comment",
-							"repository":"owner01/repo01",
-							"repository_owner":"owner01",
-							"issue":{"number":123,"pull_request":{}},
-							"event":{"comment":{"body":"///terraform apply"}}
-						}`),
 					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
 				}
 
@@ -845,15 +895,19 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					fmt.Sprintf("FILE_PATH_TERRAFORM=%s", fcmd.DirPath().FilePathCommand()),
 				)
 				input.Args = []string{
+					"-event-name", "issue_comment",
+					"-event-path", e2ehelpers.MustWriteFileAtRandomPath("/tmp", []byte(`{
+					    "comment": {"body": "///terraform apply"},
+						"issue": {"number":123, "pull_request":{}},
+						"repository":{
+						  "name": "repo01",
+						  "owner": {
+						    "name": "owner01"
+						  }
+						}
+					}`)),
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
 					"-p", googleCloudProjectID,
-					"-github-context", e2ehelpers.MinifyJSONString(`{
-						    "event_name":"issue_comment",
-							"repository":"owner01/repo01",
-							"repository_owner":"owner01",
-							"issue":{"number":123,"pull_request":{}},
-							"event":{"comment":{"body":"///terraform apply"}}
-						}`),
 					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
 				}
 
@@ -982,15 +1036,19 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					fmt.Sprintf("FILE_PATH_TERRAFORM=%s", fcmd.DirPath().FilePathCommand()),
 				)
 				input.Args = []string{
+					"-event-name", "issue_comment",
+					"-event-path", e2ehelpers.MustWriteFileAtRandomPath("/tmp", []byte(`{
+					    "comment": {"body": "///terraform apply"},
+						"issue": {"number":123, "pull_request":{}},
+						"repository":{
+						  "name": "repo01",
+						  "owner": {
+						    "name": "owner01"
+						  }
+						}
+					}`)),
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
 					"-p", googleCloudProjectID,
-					"-github-context", e2ehelpers.MinifyJSONString(`{
-						    "event_name":"issue_comment",
-							"repository":"owner01/repo01",
-							"repository_owner":"owner01",
-							"issue":{"number":123,"pull_request":{}},
-							"event":{"comment":{"body":"///terraform apply"}}
-						}`),
 					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
 				}
 
@@ -1095,15 +1153,19 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					fmt.Sprintf("FILE_PATH_TERRAFORM=%s", fcmd.DirPath().FilePathCommand()),
 				)
 				input.Args = []string{
+					"-event-name", "issue_comment",
+					"-event-path", e2ehelpers.MustWriteFileAtRandomPath("/tmp", []byte(`{
+					    "comment": {"body": "///terraform apply"},
+						"issue": {"number":123, "pull_request":{}},
+						"repository":{
+						  "name": "repo01",
+						  "owner": {
+						    "name": "owner01"
+						  }
+						}
+					}`)),
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
 					"-p", googleCloudProjectID,
-					"-github-context", e2ehelpers.MinifyJSONString(`{
-						    "event_name":"issue_comment",
-							"repository":"owner01/repo01",
-							"repository_owner":"owner01",
-							"issue":{"number":123,"pull_request":{}},
-							"event":{"comment":{"body":"///terraform apply"}}
-						}`),
 					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
 				}
 
@@ -1231,15 +1293,19 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					fmt.Sprintf("FILE_PATH_TERRAFORM=%s", fcmd.DirPath().FilePathCommand()),
 				)
 				input.Args = []string{
+					"-event-name", "issue_comment",
+					"-event-path", e2ehelpers.MustWriteFileAtRandomPath("/tmp", []byte(`{
+					    "comment": {"body": "///terraform apply"},
+						"issue": {"number":123, "pull_request":{}},
+						"repository":{
+						  "name": "repo01",
+						  "owner": {
+						    "name": "owner01"
+						  }
+						}
+					}`)),
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
 					"-p", googleCloudProjectID,
-					"-github-context", e2ehelpers.MinifyJSONString(`{
-						    "event_name":"issue_comment",
-							"repository":"owner01/repo01",
-							"repository_owner":"owner01",
-							"issue":{"number":123,"pull_request":{}},
-							"event":{"comment":{"body":"///terraform apply"}}
-						}`),
 					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
 				}
 
@@ -1335,15 +1401,17 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					fmt.Sprintf("FILE_PATH_TERRAFORM=%s", fcmd.DirPath().FilePathCommand()),
 				)
 				input.Args = []string{
+					"-event-name", "schedule",
+					"-event-path", e2ehelpers.MustWriteFileAtRandomPath("/tmp", []byte(`{
+						"repository":{
+						  "name": "repo01",
+						  "owner": {
+						    "name": "owner01"
+						  }
+						}
+					}`)),
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
 					"-p", googleCloudProjectID,
-					"-github-context", e2ehelpers.MinifyJSONString(`{
-						    "event_name":"schedule",
-							"repository":"owner01/repo01",
-							"repository_owner":"owner01",
-							"ref_name":"main",
-							"ref_type":"branch"
-						}`),
 					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
 				}
 
@@ -1484,15 +1552,17 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					fmt.Sprintf("FILE_PATH_TERRAFORM=%s", fcmd.DirPath().FilePathCommand()),
 				)
 				input.Args = []string{
+					"-event-name", "workflow_dispatch",
+					"-event-path", e2ehelpers.MustWriteFileAtRandomPath("/tmp", []byte(`{
+						"repository":{
+						  "name": "repo01",
+						  "owner": {
+						    "name": "owner01"
+						  }
+						}
+					}`)),
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
 					"-p", googleCloudProjectID,
-					"-github-context", e2ehelpers.MinifyJSONString(`{
-						    "event_name":"workflow_dispatch",
-							"repository":"owner01/repo01",
-							"repository_owner":"owner01",
-							"ref_name":"main",
-							"ref_type":"branch"
-						}`),
 					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
 				}
 
