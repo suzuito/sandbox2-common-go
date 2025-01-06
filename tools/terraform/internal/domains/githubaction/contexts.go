@@ -29,5 +29,5 @@ type Repository struct {
 }
 
 type RepositoryOwner struct {
-	Name string `json:"name"`
+	Login string `json:"login"`
 }

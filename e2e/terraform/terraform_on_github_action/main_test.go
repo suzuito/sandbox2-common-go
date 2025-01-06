@@ -247,7 +247,7 @@ func TestTerraformOnGithubAction(t *testing.T) {
 						"repository":{
 						  "name": "repo01",
 						  "owner": {
-						    "name": "owner01"
+						    "login": "owner01"
 						  }
 						}
 					}`)),
@@ -412,7 +412,7 @@ func TestTerraformOnGithubAction(t *testing.T) {
 						"repository":{
 						  "name": "repo01",
 						  "owner": {
-						    "name": "owner01"
+						    "login": "owner01"
 						  }
 						}
 					}`)),
@@ -608,7 +608,7 @@ func TestTerraformOnGithubAction(t *testing.T) {
 						"repository":{
 						  "name": "repo01",
 						  "owner": {
-						    "name": "owner01"
+						    "login": "owner01"
 						  }
 						}
 					}`)),
@@ -747,7 +747,7 @@ func TestTerraformOnGithubAction(t *testing.T) {
 						"repository":{
 						  "name": "repo01",
 						  "owner": {
-						    "name": "owner01"
+						    "login": "owner01"
 						  }
 						}
 					}`)),
@@ -902,7 +902,7 @@ func TestTerraformOnGithubAction(t *testing.T) {
 						"repository":{
 						  "name": "repo01",
 						  "owner": {
-						    "name": "owner01"
+						    "login": "owner01"
 						  }
 						}
 					}`)),
@@ -1043,7 +1043,7 @@ func TestTerraformOnGithubAction(t *testing.T) {
 						"repository":{
 						  "name": "repo01",
 						  "owner": {
-						    "name": "owner01"
+						    "login": "owner01"
 						  }
 						}
 					}`)),
@@ -1160,7 +1160,7 @@ func TestTerraformOnGithubAction(t *testing.T) {
 						"repository":{
 						  "name": "repo01",
 						  "owner": {
-						    "name": "owner01"
+						    "login": "owner01"
 						  }
 						}
 					}`)),
@@ -1300,7 +1300,7 @@ func TestTerraformOnGithubAction(t *testing.T) {
 						"repository":{
 						  "name": "repo01",
 						  "owner": {
-						    "name": "owner01"
+						    "login": "owner01"
 						  }
 						}
 					}`)),
@@ -1406,7 +1406,7 @@ func TestTerraformOnGithubAction(t *testing.T) {
 						"repository":{
 						  "name": "repo01",
 						  "owner": {
-						    "name": "owner01"
+						    "login": "owner01"
 						  }
 						}
 					}`)),
@@ -1557,7 +1557,7 @@ func TestTerraformOnGithubAction(t *testing.T) {
 						"repository":{
 						  "name": "repo01",
 						  "owner": {
-						    "name": "owner01"
+						    "login": "owner01"
 						  }
 						}
 					}`)),
