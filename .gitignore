@@ -6,6 +6,6 @@ playground/
 dist/
 
 cov/
-textfmt.txt
+textfmt.*.txt
 gocov.html
 gocovfunc.txt

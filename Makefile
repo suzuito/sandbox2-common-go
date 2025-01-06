@@ -45,9 +45,10 @@ merge-test-report:
 	,tools/terraform/cov/e2e/check-terraform-rules\
 	,tools/terraform/cov/e2e/terraform_on_github_action\
 	,tools/fakecmd/cov/e2e/fakecmd\
-	 -o=textfmt.txt
-	go tool cover -html=textfmt.txt -o=gocov.html
-	go tool cover -func=textfmt.txt -o=gocovfunc.txt
+	 -o=textfmt.0.txt
+	grep -v 'libs/e2ehelpers/' textfmt.0.txt > textfmt.1.txt
+	go tool cover -html=textfmt.1.txt -o=gocov.html
+	go tool cover -func=textfmt.1.txt -o=gocovfunc.txt
 
 .PHONY: start-e2e-environment
 start-e2e-environment:
