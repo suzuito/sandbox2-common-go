@@ -39,18 +39,30 @@ func main() {
 		os.Exit(1)
 	}
 
+	var eventName string
+	var eventPath string
 	var dirPathBase string
 	var projectID string
-	var githubContextJSON string
 	var dirPathRootGit string
 
+	flag.StringVar(&eventName, "event-name", "", "Event name of GitHub Action")
+	flag.StringVar(&eventPath, "event-path", "", "Event path of GitHub Action")
 	flag.StringVar(&dirPathBase, "d", "", "Base directory path")
 	flag.StringVar(&projectID, "p", "", "Google Cloud Project ID")
-	flag.StringVar(&githubContextJSON, "github-context", "", "Context object json of Github Action https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/accessing-contextual-information-about-workflow-runs#github-context")
 	flag.StringVar(&dirPathRootGit, "git-rootdir", "", "Base directory path of git")
 	flag.Usage = usage
 
 	flag.Parse()
+
+	if eventName == "" {
+		fmt.Fprintln(os.Stderr, "-event-name is required")
+		os.Exit(1)
+	}
+
+	if eventPath == "" {
+		fmt.Fprintln(os.Stderr, "-event-path is required")
+		os.Exit(1)
+	}
 
 	if dirPathBase == "" {
 		fmt.Fprintln(os.Stderr, "-d is required")
@@ -59,11 +71,6 @@ func main() {
 
 	if projectID == "" {
 		fmt.Fprintln(os.Stderr, "-p is required")
-		os.Exit(1)
-	}
-
-	if githubContextJSON == "" {
-		fmt.Fprintln(os.Stderr, "-github-context is required")
 		os.Exit(1)
 	}
 
@@ -80,7 +87,8 @@ func main() {
 	arg, ok, err := terraformexe.NewTerraformExecutionArg(
 		dirPathBase,
 		projectID,
-		githubContextJSON,
+		eventName,
+		eventPath,
 	)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%+v\n", err)
