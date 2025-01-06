@@ -9,14 +9,6 @@ type PlanResult struct {
 
 type PlanResults []*PlanResult
 
-func (t *PlanResults) ModulesApplied() module.Modules {
-	mods := module.Modules{}
-	for _, a := range *t {
-		mods = append(mods, a.Module)
-	}
-	return mods
-}
-
 type ApplyResult struct{}
 
 type ApplyResults []*ApplyResult

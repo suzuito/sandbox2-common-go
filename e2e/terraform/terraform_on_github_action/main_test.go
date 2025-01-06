@@ -36,9 +36,6 @@ func TestTerraformOnGithubAction(t *testing.T) {
 		http.DefaultClient,
 	)
 
-	externalCommandFaker := e2ehelpers.ExternalCommandFaker{}
-	defer externalCommandFaker.Cleanup() //nolint:errcheck
-
 	commandFaker := domains.MustByEnv()
 	defer commandFaker.Cleanup() //nolint:errcheck
 

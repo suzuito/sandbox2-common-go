@@ -23,7 +23,8 @@ mkdir -p $2
 rm -f $2/*
 export GOCOVERDIR=$(realpath $2)
 
-export FILE_PATH_FAKECMD=$(go env GOPATH)/bin/fakecmd
+make tools/fakecmd/dist/prd/fakecmd
+export FILE_PATH_FAKECMD=$(realpath tools/fakecmd/dist/prd/fakecmd)
 
 go test -count=1 -v $3
 EXIT_CODE=$?
