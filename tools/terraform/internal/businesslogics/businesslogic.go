@@ -219,16 +219,19 @@ func (t *impl) CommentResults(
 	issueNumber int,
 	results []fmt.Stringer,
 ) error {
-	bodyString := strings.Join(
-		slices.Collect(
-			utils.Map(
-				func(v fmt.Stringer) string { return v.String() },
-				slices.Values(results),
+	bodyString := fmt.Sprintf(
+		"```\n%s```\n",
+		strings.Join(
+			slices.Collect(
+				utils.Map(
+					func(v fmt.Stringer) string { return v.String() },
+					slices.Values(results),
+				),
 			),
+			"\n----------------------------------------\n"+
+				"----------------------------------------\n"+
+				"----------------------------------------\n",
 		),
-		"\n----------------------------------------\n"+
-			"----------------------------------------\n"+
-			"----------------------------------------\n",
 	)
 
 	if _, _, err := t.GithubIssuesService.CreateComment(
