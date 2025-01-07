@@ -29,7 +29,6 @@ type Usecase interface {
 		ctx context.Context,
 		dirPathBase string,
 		dirPathRootGit string,
-		projectID string,
 		arg *terraformexe.Arg,
 	) error
 }
@@ -89,29 +88,12 @@ func (t *impl) TerraformOnGithubAction(
 	ctx context.Context,
 	dirPathBase string,
 	dirPathRootGit string,
-	projectID string,
 	arg *terraformexe.Arg,
 ) error {
 	modules, err := t.businessLogic.ParseBaseDir(ctx, dirPathBase)
 	if err != nil {
 		return terrors.Wrap(err)
 	}
-
-	modules = slices.Collect(utils.Filter(
-		func(m *module.Module) bool {
-			if !m.IsRoot {
-				return true
-			}
-
-			pid, exists := m.GoogleProjectID()
-			if !exists {
-				return false
-			}
-
-			return pid == projectID
-		},
-		slices.Values(modules),
-	))
 
 	switch arg.TargetType {
 	case terraformexe.ForOnlyChageFiles:

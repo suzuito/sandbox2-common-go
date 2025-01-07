@@ -42,13 +42,11 @@ func main() {
 	var eventName string
 	var eventPath string
 	var dirPathBase string
-	var projectID string
 	var dirPathRootGit string
 
 	flag.StringVar(&eventName, "event-name", "", "Event name of GitHub Action")
 	flag.StringVar(&eventPath, "event-path", "", "Event path of GitHub Action")
 	flag.StringVar(&dirPathBase, "d", "", "Base directory path")
-	flag.StringVar(&projectID, "p", "", "Google Cloud Project ID")
 	flag.StringVar(&dirPathRootGit, "git-rootdir", "", "Base directory path of git")
 	flag.Usage = usage
 
@@ -69,11 +67,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	if projectID == "" {
-		fmt.Fprintln(os.Stderr, "-p is required")
-		os.Exit(1)
-	}
-
 	if dirPathRootGit == "" {
 		fmt.Fprintln(os.Stderr, "-git-rootdir is required")
 		os.Exit(1)
@@ -86,7 +79,6 @@ func main() {
 
 	arg, ok, err := terraformexe.NewTerraformExecutionArg(
 		dirPathBase,
-		projectID,
 		eventName,
 		eventPath,
 	)
@@ -105,7 +97,6 @@ func main() {
 		ctx,
 		dirPathBase,
 		dirPathRootGit,
-		projectID,
 		arg,
 	); err != nil {
 		if clierr, ok := errordefcli.AsCLIError(err); ok {
