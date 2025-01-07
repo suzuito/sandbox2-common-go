@@ -127,7 +127,11 @@ func (t *impl) TerraformOnGithubAction(
 
 		absPaths := make([]string, 0, len(paths))
 		for _, p := range paths {
-			absPaths = append(absPaths, filepath.Join(dirPathRootGit, p))
+			absPath, err := filepath.Abs(filepath.Join(dirPathRootGit, p))
+			if err != nil {
+				return terrors.Wrap(err)
+			}
+			absPaths = append(absPaths, absPath)
 		}
 
 		modules, err = filterModulesByTargetAbsFilePaths(modules, absPaths)
