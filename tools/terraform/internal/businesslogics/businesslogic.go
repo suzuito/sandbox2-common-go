@@ -2,14 +2,18 @@ package businesslogics
 
 import (
 	"context"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
+	"strings"
 
 	"github.com/google/go-github/v68/github"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsimple"
 	"github.com/suzuito/sandbox2-common-go/libs/terrors"
+	"github.com/suzuito/sandbox2-common-go/libs/utils"
 	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/reporter"
 	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/rule"
 	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/terraformexe"
@@ -39,6 +43,13 @@ type BusinessLogic interface {
 		repo string,
 		pr int,
 	) ([]string, error)
+	CommentResults(
+		ctx context.Context,
+		owner string,
+		repo string,
+		issueNumber int,
+		results []fmt.Stringer,
+	) error
 	TerraformInit(
 		ctx context.Context,
 		module *module.Module,
@@ -56,6 +67,7 @@ type BusinessLogic interface {
 type impl struct {
 	Reporter                  reporter.Reporter
 	GithubPullRequestsService gateways.GithubPullRequestsService
+	GithubIssuesService       gateways.GithubIssuesService
 	Terraform                 gateways.TerraformGateway
 }
 
@@ -200,6 +212,40 @@ func (t *impl) FetchPathsChangedInPR(
 	return returned, nil
 }
 
+func (t *impl) CommentResults(
+	ctx context.Context,
+	owner string,
+	repo string,
+	issueNumber int,
+	results []fmt.Stringer,
+) error {
+	bodyString := strings.Join(
+		slices.Collect(
+			utils.Map(
+				func(v fmt.Stringer) string { return v.String() },
+				slices.Values(results),
+			),
+		),
+		"\n----------------------------------------\n"+
+			"----------------------------------------\n"+
+			"----------------------------------------\n",
+	)
+
+	if _, _, err := t.GithubIssuesService.CreateComment(
+		ctx,
+		owner,
+		repo,
+		issueNumber,
+		&github.IssueComment{
+			Body: &bodyString,
+		},
+	); err != nil {
+		return terrors.Errorf("failed to GithubIssuesService.CreateComment: %w", err)
+	}
+
+	return nil
+}
+
 func (t *impl) TerraformInit(
 	ctx context.Context,
 	module *module.Module,
@@ -235,11 +281,13 @@ func (t *impl) TerraformApply(
 func New(
 	reporter reporter.Reporter,
 	githubPullRequestsService gateways.GithubPullRequestsService,
+	githubIssuesService gateways.GithubIssuesService,
 	terraform gateways.TerraformGateway,
 ) *impl {
 	return &impl{
 		Reporter:                  reporter,
 		GithubPullRequestsService: githubPullRequestsService,
+		GithubIssuesService:       githubIssuesService,
 		Terraform:                 terraform,
 	}
 }

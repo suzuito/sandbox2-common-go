@@ -7,8 +7,16 @@ type PlanResult struct {
 	IsPlanDiff bool
 }
 
+func (t *PlanResult) String() string {
+	return "not impl"
+}
+
 type PlanResults []*PlanResult
 
 type ApplyResult struct{}
+
+func (t *ApplyResult) String() string {
+	return "not impl"
+}
 
 type ApplyResults []*ApplyResult
