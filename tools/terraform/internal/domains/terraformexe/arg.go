@@ -25,7 +25,6 @@ const (
 
 func NewTerraformExecutionArg(
 	dirPathBase string,
-	projectID string,
 	eventName string,
 	eventPath string,
 ) (*Arg, bool, error) {

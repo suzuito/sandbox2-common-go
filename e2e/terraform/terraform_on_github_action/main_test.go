@@ -15,8 +15,6 @@ import (
 	"github.com/suzuito/sandbox2-common-go/tools/fakecmd/domains"
 )
 
-var googleCloudProjectID = "prj01"
-
 func TestTerraformOnGithubAction(t *testing.T) {
 	filePathBin := os.Getenv("FILE_PATH_BIN")
 
@@ -60,7 +58,6 @@ func TestTerraformOnGithubAction(t *testing.T) {
 				input.Args = []string{
 					"-event-path", "foo.json",
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-					"-p", googleCloudProjectID,
 					"-git-rootdir", "dummygithubroot",
 				}
 				expected.ExitCode = 1
@@ -82,7 +79,6 @@ func TestTerraformOnGithubAction(t *testing.T) {
 				input.Args = []string{
 					"-event-name", "issue_comment",
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-					"-p", googleCloudProjectID,
 					"-git-rootdir", "dummygithubroot",
 				}
 				expected.ExitCode = 1
@@ -104,33 +100,10 @@ func TestTerraformOnGithubAction(t *testing.T) {
 				input.Args = []string{
 					"-event-name", "issue_comment",
 					"-event-path", eventPath1,
-					"-p", googleCloudProjectID,
 					"-git-rootdir", "dummygithubroot",
 				}
 				expected.ExitCode = 1
 				expected.Stderr = "-d is required"
-			},
-		},
-		{
-			Desc: "ng - -p is required",
-			Setup: func(
-				t *testing.T,
-				testID e2ehelpers.TestID,
-				input *e2ehelpers.CLITestCaseV2Input,
-				expected *e2ehelpers.CLITestCaseV2Expected,
-			) {
-				input.Envs = append(
-					envs,
-					"GITHUB_TOKEN=foo",
-				)
-				input.Args = []string{
-					"-event-name", "issue_comment",
-					"-event-path", eventPath1,
-					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
-				}
-				expected.ExitCode = 1
-				expected.Stderr = "-p is required"
 			},
 		},
 		{
@@ -149,7 +122,6 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					"-event-name", "issue_comment",
 					"-event-path", eventPath1,
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-					"-p", googleCloudProjectID,
 				}
 				expected.ExitCode = 1
 				expected.Stderr = "-git-rootdir is required"
@@ -171,7 +143,6 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					"-event-name", "ev",
 					"-event-path", eventPath1,
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-					"-p", googleCloudProjectID,
 					"-git-rootdir", "dummygithubroot",
 				}
 				expected.Stdout = "skipped"
@@ -193,7 +164,6 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					"-event-name", "issue_comment",
 					"-event-path", "foo.json",
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-					"-p", googleCloudProjectID,
 					"-git-rootdir", "dummygithubroot",
 				}
 				expected.ExitCode = 1
@@ -216,7 +186,6 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					"-event-name", "issue_comment",
 					"-event-path", eventPath1,
 					"-d", fmt.Sprintf("%s/ghrepo01/caseXX", dirPathTestdata),
-					"-p", googleCloudProjectID,
 					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
 				}
 				expected.ExitCode = 1
@@ -252,7 +221,6 @@ func TestTerraformOnGithubAction(t *testing.T) {
 						}
 					}`)),
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-					"-p", googleCloudProjectID,
 					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
 				}
 
@@ -417,7 +385,6 @@ func TestTerraformOnGithubAction(t *testing.T) {
 						}
 					}`)),
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-					"-p", googleCloudProjectID,
 					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
 				}
 
@@ -613,7 +580,6 @@ func TestTerraformOnGithubAction(t *testing.T) {
 						}
 					}`)),
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-					"-p", googleCloudProjectID,
 					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
 				}
 
@@ -752,7 +718,6 @@ func TestTerraformOnGithubAction(t *testing.T) {
 						}
 					}`)),
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-					"-p", googleCloudProjectID,
 					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
 				}
 
@@ -907,7 +872,6 @@ func TestTerraformOnGithubAction(t *testing.T) {
 						}
 					}`)),
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-					"-p", googleCloudProjectID,
 					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
 				}
 
@@ -1048,7 +1012,6 @@ func TestTerraformOnGithubAction(t *testing.T) {
 						}
 					}`)),
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-					"-p", googleCloudProjectID,
 					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
 				}
 
@@ -1165,7 +1128,6 @@ func TestTerraformOnGithubAction(t *testing.T) {
 						}
 					}`)),
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-					"-p", googleCloudProjectID,
 					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
 				}
 
@@ -1305,7 +1267,6 @@ func TestTerraformOnGithubAction(t *testing.T) {
 						}
 					}`)),
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-					"-p", googleCloudProjectID,
 					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
 				}
 
@@ -1411,7 +1372,6 @@ func TestTerraformOnGithubAction(t *testing.T) {
 						}
 					}`)),
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-					"-p", googleCloudProjectID,
 					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
 				}
 
@@ -1467,6 +1427,21 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					"*************",
 					"==== CMD ====",
 					fmt.Sprintf(
+						"%s -chdir=%s/ghrepo01/case01/roots/r4 init -no-color",
+						fcmd.DirPath().FilePathCommand(),
+						dirPathTestdata,
+					),
+					"==== OUT ====",
+					"this is terraform command stdout",
+					"==== END ====",
+					"exit with 0",
+					"",
+					"",
+					"*************",
+					"*************",
+					"*************",
+					"==== CMD ====",
+					fmt.Sprintf(
 						"%s -chdir=%s/ghrepo01/case01/roots/r1 plan -no-color -detailed-exitcode",
 						fcmd.DirPath().FilePathCommand(),
 						dirPathTestdata,
@@ -1507,9 +1482,26 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					"exit with 0",
 					"",
 					"",
+					"*************",
+					"*************",
+					"*************",
+					"==== CMD ====",
+					fmt.Sprintf(
+						"%s -chdir=%s/ghrepo01/case01/roots/r4 plan -no-color -detailed-exitcode",
+						fcmd.DirPath().FilePathCommand(),
+						dirPathTestdata,
+					),
+					"==== OUT ====",
+					"this is terraform command stdout",
+					"==== END ====",
+					"exit with 0",
+					"",
+					"",
 				)
 
 				expected.Stderr = e2ehelpers.NewLines(
+					"this is terraform command stderr",
+					"this is terraform command stderr",
 					"this is terraform command stderr",
 					"this is terraform command stderr",
 					"this is terraform command stderr",
@@ -1562,7 +1554,6 @@ func TestTerraformOnGithubAction(t *testing.T) {
 						}
 					}`)),
 					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
-					"-p", googleCloudProjectID,
 					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
 				}
 
@@ -1618,6 +1609,21 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					"*************",
 					"==== CMD ====",
 					fmt.Sprintf(
+						"%s -chdir=%s/ghrepo01/case01/roots/r4 init -no-color",
+						fcmd.DirPath().FilePathCommand(),
+						dirPathTestdata,
+					),
+					"==== OUT ====",
+					"this is terraform command stdout",
+					"==== END ====",
+					"exit with 0",
+					"",
+					"",
+					"*************",
+					"*************",
+					"*************",
+					"==== CMD ====",
+					fmt.Sprintf(
 						"%s -chdir=%s/ghrepo01/case01/roots/r1 plan -no-color -detailed-exitcode",
 						fcmd.DirPath().FilePathCommand(),
 						dirPathTestdata,
@@ -1658,9 +1664,26 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					"exit with 0",
 					"",
 					"",
+					"*************",
+					"*************",
+					"*************",
+					"==== CMD ====",
+					fmt.Sprintf(
+						"%s -chdir=%s/ghrepo01/case01/roots/r4 plan -no-color -detailed-exitcode",
+						fcmd.DirPath().FilePathCommand(),
+						dirPathTestdata,
+					),
+					"==== OUT ====",
+					"this is terraform command stdout",
+					"==== END ====",
+					"exit with 0",
+					"",
+					"",
 				)
 
 				expected.Stderr = e2ehelpers.NewLines(
+					"this is terraform command stderr",
+					"this is terraform command stderr",
 					"this is terraform command stderr",
 					"this is terraform command stderr",
 					"this is terraform command stderr",
