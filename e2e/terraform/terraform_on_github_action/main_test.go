@@ -261,6 +261,33 @@ func TestTerraformOnGithubAction(t *testing.T) {
 								Body: `[]`,
 							},
 						},
+						{
+							Request: types.MockRequest{
+								Method: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "POST",
+								},
+								Path: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "/repos/owner01/repo01/issues/123/comments",
+								},
+								Headers: types.MultiMapMatcher{
+									"E2e-Testid": {
+										{
+											Matcher: "ShouldEqual",
+											Value:   testID.String(),
+										},
+									},
+								},
+							},
+							Response: &types.MockResponse{
+								Status: http.StatusCreated,
+								Headers: types.MapStringSlice{
+									"Content-Type": types.StringSlice{"application/json"},
+								},
+								Body: `{}`,
+							},
+						},
 					},
 					false,
 				))
@@ -316,6 +343,33 @@ func TestTerraformOnGithubAction(t *testing.T) {
 											    {"filename":"case01/roots/r2/.terraform.lock.hcl"},
 											    {"filename":"case01/commons/r3m1m1/main.tf"}
 											]`,
+							},
+						},
+						{
+							Request: types.MockRequest{
+								Method: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "POST",
+								},
+								Path: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "/repos/owner01/repo01/issues/123/comments",
+								},
+								Headers: types.MultiMapMatcher{
+									"E2e-Testid": {
+										{
+											Matcher: "ShouldEqual",
+											Value:   testID.String(),
+										},
+									},
+								},
+							},
+							Response: &types.MockResponse{
+								Status: http.StatusCreated,
+								Headers: types.MapStringSlice{
+									"Content-Type": types.StringSlice{"application/json"},
+								},
+								Body: `{}`,
 							},
 						},
 					},
@@ -540,6 +594,33 @@ func TestTerraformOnGithubAction(t *testing.T) {
 											]`,
 							},
 						},
+						{
+							Request: types.MockRequest{
+								Method: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "POST",
+								},
+								Path: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "/repos/owner01/repo01/issues/123/comments",
+								},
+								Headers: types.MultiMapMatcher{
+									"E2e-Testid": {
+										{
+											Matcher: "ShouldEqual",
+											Value:   testID.String(),
+										},
+									},
+								},
+							},
+							Response: &types.MockResponse{
+								Status: http.StatusCreated,
+								Headers: types.MapStringSlice{
+									"Content-Type": types.StringSlice{"application/json"},
+								},
+								Body: `{}`,
+							},
+						},
 					},
 					false,
 				))
@@ -670,6 +751,33 @@ func TestTerraformOnGithubAction(t *testing.T) {
 										    {"filename":"hoge/fuga.go"},
 										    {"filename":"case01/roots/r1/main.tf"}
 										]`,
+							},
+						},
+						{
+							Request: types.MockRequest{
+								Method: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "POST",
+								},
+								Path: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "/repos/owner01/repo01/issues/123/comments",
+								},
+								Headers: types.MultiMapMatcher{
+									"E2e-Testid": {
+										{
+											Matcher: "ShouldEqual",
+											Value:   testID.String(),
+										},
+									},
+								},
+							},
+							Response: &types.MockResponse{
+								Status: http.StatusCreated,
+								Headers: types.MapStringSlice{
+									"Content-Type": types.StringSlice{"application/json"},
+								},
+								Body: `{}`,
 							},
 						},
 					},
@@ -823,6 +931,33 @@ func TestTerraformOnGithubAction(t *testing.T) {
 										    {"filename":"hoge/fuga.go"},
 										    {"filename":"case01/roots/r1/main.tf"}
 										]`,
+							},
+						},
+						{
+							Request: types.MockRequest{
+								Method: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "POST",
+								},
+								Path: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "/repos/owner01/repo01/issues/123/comments",
+								},
+								Headers: types.MultiMapMatcher{
+									"E2e-Testid": {
+										{
+											Matcher: "ShouldEqual",
+											Value:   testID.String(),
+										},
+									},
+								},
+							},
+							Response: &types.MockResponse{
+								Status: http.StatusCreated,
+								Headers: types.MapStringSlice{
+									"Content-Type": types.StringSlice{"application/json"},
+								},
+								Body: `{}`,
 							},
 						},
 					},
@@ -1218,6 +1353,33 @@ func TestTerraformOnGithubAction(t *testing.T) {
 										    {"filename":"hoge/fuga.go"},
 										    {"filename":"case01/roots/r1/main.tf"}
 										]`,
+							},
+						},
+						{
+							Request: types.MockRequest{
+								Method: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "POST",
+								},
+								Path: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "/repos/owner01/repo01/issues/123/comments",
+								},
+								Headers: types.MultiMapMatcher{
+									"E2e-Testid": {
+										{
+											Matcher: "ShouldEqual",
+											Value:   testID.String(),
+										},
+									},
+								},
+							},
+							Response: &types.MockResponse{
+								Status: http.StatusCreated,
+								Headers: types.MapStringSlice{
+									"Content-Type": types.StringSlice{"application/json"},
+								},
+								Body: `{}`,
 							},
 						},
 					},

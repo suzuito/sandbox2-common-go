@@ -39,6 +39,7 @@ func NewUsecase(env *Environment) usecases.Usecase {
 		businesslogics.New(
 			reporter.New(),
 			githubClient.PullRequests,
+			githubClient.Issues,
 			terraform,
 		),
 	)

@@ -141,6 +141,7 @@ func (t *impl) TerraformOnGithubAction(
 	}
 
 	diff := false
+	results := []fmt.Stringer{}
 	for _, module := range modules {
 		planResult, err := t.businessLogic.TerraformPlan(ctx, module)
 		if err != nil {
@@ -150,6 +151,8 @@ func (t *impl) TerraformOnGithubAction(
 		if planResult.IsPlanDiff {
 			diff = true
 		}
+
+		results = append(results, planResult)
 	}
 
 	if arg.PlanOnly {
@@ -160,7 +163,22 @@ func (t *impl) TerraformOnGithubAction(
 	}
 
 	for _, module := range modules {
-		if _, err := t.businessLogic.TerraformApply(ctx, module); err != nil {
+		applyResult, err := t.businessLogic.TerraformApply(ctx, module)
+		if err != nil {
+			return terrors.Wrap(err)
+		}
+
+		results = append(results, applyResult)
+	}
+
+	if arg.GitHubOwner != "" && arg.GitHubRepository != "" && arg.GitHubPullRequestNumber > 0 {
+		if err := t.businessLogic.CommentResults(
+			ctx,
+			arg.GitHubOwner,
+			arg.GitHubRepository,
+			arg.GitHubPullRequestNumber,
+			results,
+		); err != nil {
 			return terrors.Wrap(err)
 		}
 	}
