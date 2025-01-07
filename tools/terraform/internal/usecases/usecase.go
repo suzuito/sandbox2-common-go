@@ -183,12 +183,6 @@ func (t *impl) TerraformOnGithubAction(
 }
 
 func filterModulesByTargetAbsFilePaths(modules module.Modules, targetAbsFilePaths []string) (module.Modules, error) {
-	for _, f := range targetAbsFilePaths {
-		if !filepath.IsAbs(f) {
-			return nil, terrors.Errorf("target file '%s' is not abs path", f)
-		}
-	}
-
 	modulesByAbsPath := map[module.ModulePath]*module.Module{}
 	for _, m := range modules {
 		modulesByAbsPath[m.AbsPath] = m
