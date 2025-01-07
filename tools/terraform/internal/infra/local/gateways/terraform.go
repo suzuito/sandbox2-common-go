@@ -1,6 +1,7 @@
 package gateways
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -63,7 +64,8 @@ func (t *terraformGateway) Plan(
 
 	return &terraformexe.PlanResult{
 		IsPlanDiff: result.ExitCode == 2,
-		Module:     module,
+		Stdout:     result.Stdout,
+		Stderr:     result.Stderr,
 	}, nil
 }
 
@@ -87,12 +89,17 @@ func (t *terraformGateway) Apply(
 		return nil, fmt.Errorf("failed to apply")
 	}
 
-	return &terraformexe.ApplyResult{}, nil
+	return &terraformexe.ApplyResult{
+		Stdout: result.Stdout,
+		Stderr: result.Stderr,
+	}, nil
 }
 
 type runResult struct {
 	Cmd      string
 	ExitCode int
+	Stdout   string
+	Stderr   string
 }
 
 func (t *terraformGateway) run(
@@ -100,22 +107,27 @@ func (t *terraformGateway) run(
 	commandName string,
 	args []string,
 ) (*runResult, error) {
+	stdoutBuffer := bytes.NewBufferString("")
+	stderrBuffer := bytes.NewBufferString("")
+	stdout := io.MultiWriter(stdoutBuffer, t.stdout)
+	stderr := io.MultiWriter(stderrBuffer, t.stderr)
+
 	commandline := fmt.Sprintf("%s %s", commandName, strings.Join(args, " "))
-	fmt.Fprintf(t.stdout, "\n")
-	fmt.Fprintln(t.stdout, "*************")
-	fmt.Fprintln(t.stdout, "*************")
-	fmt.Fprintln(t.stdout, "*************")
-	fmt.Fprintf(t.stdout, "==== CMD ====\n")
-	fmt.Fprintf(t.stdout, "%s\n", commandline)
-	fmt.Fprintf(t.stdout, "==== OUT ====\n")
+	fmt.Fprintf(stdout, "\n")
+	fmt.Fprintln(stdout, "*************")
+	fmt.Fprintln(stdout, "*************")
+	fmt.Fprintln(stdout, "*************")
+	fmt.Fprintf(stdout, "==== CMD ====\n")
+	fmt.Fprintf(stdout, "%s\n", commandline)
+	fmt.Fprintf(stdout, "==== OUT ====\n")
 	cmd := exec.CommandContext(
 		ctx,
 		commandName,
 		args...,
 	)
 	envs := []string{}
-	cmd.Stderr = t.stderr
-	cmd.Stdout = t.stdout
+	cmd.Stderr = stderr
+	cmd.Stdout = stdout
 	cmd.Env = append(cmd.Environ(), envs...)
 	if err := cmd.Run(); err != nil {
 		var exiterr *exec.ExitError
@@ -123,12 +135,14 @@ func (t *terraformGateway) run(
 			return nil, terrors.Errorf("failed to cmd.Run: %w", err)
 		}
 	}
-	fmt.Fprintf(t.stdout, "==== END ====\n")
-	fmt.Fprintf(t.stdout, "exit with %d\n", cmd.ProcessState.ExitCode())
-	fmt.Fprintf(t.stdout, "\n")
+	fmt.Fprintf(stdout, "==== END ====\n")
+	fmt.Fprintf(stdout, "exit with %d\n", cmd.ProcessState.ExitCode())
+	fmt.Fprintf(stdout, "\n")
 	return &runResult{
 		Cmd:      commandline,
 		ExitCode: cmd.ProcessState.ExitCode(),
+		Stdout:   stdoutBuffer.String(),
+		Stderr:   stderrBuffer.String(),
 	}, nil
 }
 

@@ -155,20 +155,15 @@ func (t *impl) TerraformOnGithubAction(
 		results = append(results, planResult)
 	}
 
-	if arg.PlanOnly {
-		if diff {
-			return errordefcli.NewCLIError(2, "diff at `terraform plan`")
-		}
-		return nil
-	}
+	if !arg.PlanOnly {
+		for _, module := range modules {
+			applyResult, err := t.businessLogic.TerraformApply(ctx, module)
+			if err != nil {
+				return terrors.Wrap(err)
+			}
 
-	for _, module := range modules {
-		applyResult, err := t.businessLogic.TerraformApply(ctx, module)
-		if err != nil {
-			return terrors.Wrap(err)
+			results = append(results, applyResult)
 		}
-
-		results = append(results, applyResult)
 	}
 
 	if arg.GitHubOwner != "" && arg.GitHubRepository != "" && arg.GitHubPullRequestNumber > 0 {
@@ -181,6 +176,10 @@ func (t *impl) TerraformOnGithubAction(
 		); err != nil {
 			return terrors.Wrap(err)
 		}
+	}
+
+	if arg.PlanOnly && diff {
+		return errordefcli.NewCLIError(2, "diff at `terraform plan`")
 	}
 
 	return nil

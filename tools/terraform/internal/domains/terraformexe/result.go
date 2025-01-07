@@ -1,22 +1,22 @@
 package terraformexe
 
-import "github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/terraformmodels/module"
+import "fmt"
 
 type PlanResult struct {
-	Module     *module.Module
 	IsPlanDiff bool
+	Stdout     string
+	Stderr     string
 }
 
 func (t *PlanResult) String() string {
-	return "not impl"
+	return fmt.Sprintf("out:\n%s\nerr:\n%s", t.Stdout, t.Stderr)
 }
 
-type PlanResults []*PlanResult
-
-type ApplyResult struct{}
+type ApplyResult struct {
+	Stdout string
+	Stderr string
+}
 
 func (t *ApplyResult) String() string {
-	return "not impl"
+	return fmt.Sprintf("out:\n%s\nerr:\n%s", t.Stdout, t.Stderr)
 }
-
-type ApplyResults []*ApplyResult
