@@ -43,6 +43,12 @@ type BusinessLogic interface {
 		repo string,
 		pr int,
 	) ([]string, error)
+	IsPRMergable(
+		ctx context.Context,
+		owner string,
+		repo string,
+		pr int,
+	) (bool, error)
 	CommentResults(
 		ctx context.Context,
 		owner string,
@@ -210,6 +216,24 @@ func (t *impl) FetchPathsChangedInPR(
 	}
 
 	return returned, nil
+}
+
+func (t *impl) IsPRMergable(
+	ctx context.Context,
+	owner string,
+	repo string,
+	prNumber int,
+) (bool, error) {
+	pr, _, err := t.GithubPullRequestsService.Get(ctx, owner, repo, prNumber)
+	if err != nil {
+		return false, terrors.Errorf("failed to GithubPullRequestsService.Get: %w", err)
+	}
+
+	if pr.Mergeable == nil {
+		return false, nil
+	}
+
+	return *pr.Mergeable, nil
 }
 
 func (t *impl) CommentResults(

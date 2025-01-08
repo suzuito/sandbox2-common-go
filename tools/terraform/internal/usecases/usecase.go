@@ -156,6 +156,19 @@ func (t *impl) TerraformOnGithubAction(
 	}
 
 	if !arg.PlanOnly {
+		if arg.GitHubOwner != "" && arg.GitHubRepository != "" && arg.GitHubPullRequestNumber > 0 {
+			if result, err := t.businessLogic.IsPRMergable(
+				ctx,
+				arg.GitHubOwner,
+				arg.GitHubRepository,
+				arg.GitHubPullRequestNumber,
+			); err != nil {
+				return terrors.Wrap(err)
+			} else if !result {
+				return terrors.Errorf("pr is not mergable")
+			}
+		}
+
 		for _, module := range modules {
 			applyResult, err := t.businessLogic.TerraformApply(ctx, module)
 			if err != nil {
