@@ -254,7 +254,7 @@ func (t *impl) MergePR(
 		fmt.Sprintf("Merge pull request %d automatically", pr),
 		&github.PullRequestOptions{},
 	); err != nil {
-		terrors.Errorf("failed to GithubPullRequestsService.Merge: %w", err)
+		return terrors.Errorf("failed to GithubPullRequestsService.Merge: %w", err)
 	}
 	return nil
 }
