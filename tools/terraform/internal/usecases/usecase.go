@@ -15,7 +15,6 @@ import (
 	"github.com/suzuito/sandbox2-common-go/libs/utils"
 	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/businesslogics"
 	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/rule"
-	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/terraformexe"
 	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/terraformmodels/module"
 )
 
@@ -25,11 +24,19 @@ type Usecase interface {
 		dirPathBase string,
 		rules rule.Rules,
 	) error
-	TerraformOnGithubAction(
+	TerraformInPR(
 		ctx context.Context,
 		dirPathBase string,
 		dirPathRootGit string,
-		arg *terraformexe.Arg,
+		githubOwner string,
+		githubRepo string,
+		githubPRNumber int,
+		planOnly bool,
+	) error
+	TerraformPlanAllModules(
+		ctx context.Context,
+		dirPathBase string,
+		dirPathRootGit string,
 	) error
 }
 
@@ -84,53 +91,133 @@ func (t *impl) CheckTerraformRules(
 	return nil
 }
 
-func (t *impl) TerraformOnGithubAction(
+func (t *impl) TerraformInPR(
 	ctx context.Context,
 	dirPathBase string,
 	dirPathRootGit string,
-	arg *terraformexe.Arg,
+	githubOwner string,
+	githubRepo string,
+	githubPRNumber int,
+	planOnly bool,
 ) error {
 	modules, err := t.businessLogic.ParseBaseDir(ctx, dirPathBase)
 	if err != nil {
 		return terrors.Wrap(err)
 	}
 
-	switch arg.TargetType {
-	case terraformexe.ForOnlyChageFiles:
-		paths, err := t.businessLogic.FetchPathsChangedInPR(
+	paths, err := t.businessLogic.FetchPathsChangedInPR(
+		ctx,
+		githubOwner,
+		githubRepo,
+		githubPRNumber,
+	)
+	if err != nil {
+		return terrors.Wrap(err)
+	}
+
+	absPaths := make([]string, 0, len(paths))
+	for _, p := range paths {
+		absPath, err := filepath.Abs(filepath.Join(dirPathRootGit, p))
+		if err != nil {
+			return terrors.Wrap(err)
+		}
+		absPaths = append(absPaths, absPath)
+	}
+
+	modules, err = filterModulesByTargetAbsFilePaths(modules, absPaths)
+	if err != nil {
+		return terrors.Wrap(err)
+	}
+
+	if len(modules) <= 0 {
+		fmt.Printf("no file changed in PR: %d\n", githubPRNumber)
+		return nil
+	}
+
+	for _, module := range modules {
+		if err := t.businessLogic.TerraformInit(ctx, module); err != nil {
+			return terrors.Wrap(err)
+		}
+	}
+
+	diff := false
+	results := []string{}
+	for _, module := range modules {
+		planResult, err := t.businessLogic.TerraformPlan(ctx, module)
+		if err != nil {
+			return terrors.Wrap(err)
+		}
+
+		if planResult.IsPlanDiff {
+			diff = true
+		}
+
+		results = append(results, planResult.String())
+	}
+
+	isMergable := false
+	if !planOnly {
+		isMergable, err = t.businessLogic.IsPRMergable(
 			ctx,
-			arg.GitHubOwner,
-			arg.GitHubRepository,
-			arg.GitHubPullRequestNumber,
+			githubOwner,
+			githubRepo,
+			githubPRNumber,
 		)
 		if err != nil {
 			return terrors.Wrap(err)
 		}
 
-		absPaths := make([]string, 0, len(paths))
-		for _, p := range paths {
-			absPath, err := filepath.Abs(filepath.Join(dirPathRootGit, p))
-			if err != nil {
-				return terrors.Wrap(err)
-			}
-			absPaths = append(absPaths, absPath)
-		}
+		if !isMergable {
+			fmt.Println("pr is not mergable")
+			results = append(results, "pr is not mergable")
+		} else {
+			for _, module := range modules {
+				applyResult, err := t.businessLogic.TerraformApply(ctx, module)
+				if err != nil {
+					return terrors.Wrap(err)
+				}
 
-		modules, err = filterModulesByTargetAbsFilePaths(modules, absPaths)
-		if err != nil {
-			return terrors.Wrap(err)
+				results = append(results, applyResult.String())
+			}
 		}
-	case terraformexe.ForAllFiles:
-		modules = slices.Collect(utils.Filter(
-			func(m *module.Module) bool { return m.IsRoot },
-			slices.Values(modules),
-		))
-	default:
-		return terrors.Errorf("invalid target type %d", arg.TargetType)
 	}
 
+	if err := t.businessLogic.CommentResults(
+		ctx,
+		githubOwner,
+		githubRepo,
+		githubPRNumber,
+		results,
+	); err != nil {
+		return terrors.Wrap(err)
+	}
+
+	switch {
+	case planOnly && diff:
+		return errordefcli.NewCLIError(2, "diff at `terraform plan`")
+	case !planOnly && !isMergable:
+		return errordefcli.NewCLIError(3, "cannot exec `terraform apply` because PR is not mergable")
+	}
+
+	return nil
+}
+
+func (t *impl) TerraformPlanAllModules(
+	ctx context.Context,
+	dirPathBase string,
+	dirPathRootGit string,
+) error {
+	modules, err := t.businessLogic.ParseBaseDir(ctx, dirPathBase)
+	if err != nil {
+		return terrors.Wrap(err)
+	}
+
+	modules = slices.Collect(utils.Filter(
+		func(m *module.Module) bool { return m.IsRoot },
+		slices.Values(modules),
+	))
+
 	if len(modules) <= 0 {
-		fmt.Printf("no file changed in PR: %d\n", arg.GitHubPullRequestNumber)
 		return nil
 	}
 
@@ -155,43 +242,7 @@ func (t *impl) TerraformOnGithubAction(
 		results = append(results, planResult)
 	}
 
-	if !arg.PlanOnly {
-		if arg.GitHubOwner != "" && arg.GitHubRepository != "" && arg.GitHubPullRequestNumber > 0 {
-			if result, err := t.businessLogic.IsPRMergable(
-				ctx,
-				arg.GitHubOwner,
-				arg.GitHubRepository,
-				arg.GitHubPullRequestNumber,
-			); err != nil {
-				return terrors.Wrap(err)
-			} else if !result {
-				return terrors.Errorf("pr is not mergable")
-			}
-		}
-
-		for _, module := range modules {
-			applyResult, err := t.businessLogic.TerraformApply(ctx, module)
-			if err != nil {
-				return terrors.Wrap(err)
-			}
-
-			results = append(results, applyResult)
-		}
-	}
-
-	if arg.GitHubOwner != "" && arg.GitHubRepository != "" && arg.GitHubPullRequestNumber > 0 {
-		if err := t.businessLogic.CommentResults(
-			ctx,
-			arg.GitHubOwner,
-			arg.GitHubRepository,
-			arg.GitHubPullRequestNumber,
-			results,
-		); err != nil {
-			return terrors.Wrap(err)
-		}
-	}
-
-	if arg.PlanOnly && diff {
+	if diff {
 		return errordefcli.NewCLIError(2, "diff at `terraform plan`")
 	}
 

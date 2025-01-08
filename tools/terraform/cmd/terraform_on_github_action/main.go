@@ -93,12 +93,28 @@ func main() {
 	ctx := context.Background()
 
 	uc := inject.NewUsecase(&env)
-	if err := uc.TerraformOnGithubAction(
-		ctx,
-		dirPathBase,
-		dirPathRootGit,
-		arg,
-	); err != nil {
+	switch arg.TargetType {
+	case terraformexe.PlanAll:
+		err = uc.TerraformPlanAllModules(
+			ctx,
+			dirPathBase,
+			dirPathRootGit,
+		)
+	case terraformexe.InPR:
+		err = uc.TerraformInPR(
+			ctx,
+			dirPathBase,
+			dirPathRootGit,
+			arg.GitHubOwner,
+			arg.GitHubRepository,
+			arg.GitHubPullRequestNumber,
+			arg.PlanOnly,
+		)
+	default:
+		err = fmt.Errorf("target type is not supported: %d", arg.TargetType)
+	}
+
+	if err != nil {
 		if clierr, ok := errordefcli.AsCLIError(err); ok {
 			fmt.Fprintln(os.Stderr, clierr.Error())
 			os.Exit(clierr.ExitCode())

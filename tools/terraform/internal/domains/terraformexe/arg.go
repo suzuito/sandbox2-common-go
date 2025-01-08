@@ -19,8 +19,8 @@ type Arg struct {
 type TargetType int
 
 const (
-	ForOnlyChageFiles TargetType = iota + 1
-	ForAllFiles
+	InPR TargetType = iota + 1
+	PlanAll
 )
 
 func NewTerraformExecutionArg(
@@ -41,7 +41,7 @@ func NewTerraformExecutionArg(
 		}
 
 		arg := Arg{
-			TargetType:              ForOnlyChageFiles,
+			TargetType:              InPR,
 			GitHubOwner:             eventPayload.Repository.Owner.Login,
 			GitHubRepository:        eventPayload.Repository.Name,
 			GitHubPullRequestNumber: eventPayload.Issue.Number,
@@ -63,7 +63,7 @@ func NewTerraformExecutionArg(
 		}
 
 		arg := Arg{
-			TargetType:       ForAllFiles,
+			TargetType:       PlanAll,
 			PlanOnly:         true,
 			GitHubOwner:      eventPayload.Repository.Owner.Login,
 			GitHubRepository: eventPayload.Repository.Name,

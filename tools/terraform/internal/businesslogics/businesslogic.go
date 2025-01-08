@@ -6,14 +6,12 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"slices"
 	"strings"
 
 	"github.com/google/go-github/v68/github"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsimple"
 	"github.com/suzuito/sandbox2-common-go/libs/terrors"
-	"github.com/suzuito/sandbox2-common-go/libs/utils"
 	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/reporter"
 	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/rule"
 	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/terraformexe"
@@ -54,7 +52,7 @@ type BusinessLogic interface {
 		owner string,
 		repo string,
 		issueNumber int,
-		results []fmt.Stringer,
+		results []string,
 	) error
 	TerraformInit(
 		ctx context.Context,
@@ -241,17 +239,12 @@ func (t *impl) CommentResults(
 	owner string,
 	repo string,
 	issueNumber int,
-	results []fmt.Stringer,
+	results []string,
 ) error {
 	bodyString := fmt.Sprintf(
 		"```\n%s```\n",
 		strings.Join(
-			slices.Collect(
-				utils.Map(
-					func(v fmt.Stringer) string { return v.String() },
-					slices.Values(results),
-				),
-			),
+			results,
 			"\n----------------------------------------\n"+
 				"----------------------------------------\n"+
 				"----------------------------------------\n",
