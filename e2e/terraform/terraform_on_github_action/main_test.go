@@ -1877,7 +1877,7 @@ func TestTerraformOnGithubAction(t *testing.T) {
 								},
 								Path: types.StringMatcher{
 									Matcher: "ShouldEqual",
-									Value:   "/repos/owner01/repo01/issues/123/merge",
+									Value:   "/repos/owner01/repo01/pulls/123/merge",
 								},
 								Headers: types.MultiMapMatcher{
 									"E2e-Testid": {
