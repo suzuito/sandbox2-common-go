@@ -155,9 +155,9 @@ func (t *impl) TerraformInPR(
 		results = append(results, planResult.String())
 	}
 
-	isMergable := false
+	isMergeable := false
 	if !planOnly {
-		isMergable, err = t.businessLogic.IsPRMergable(
+		isMergeable, err = t.businessLogic.IsPRMergeable(
 			ctx,
 			githubOwner,
 			githubRepo,
@@ -167,9 +167,9 @@ func (t *impl) TerraformInPR(
 			return terrors.Wrap(err)
 		}
 
-		if !isMergable {
-			fmt.Println("pr is not mergable")
-			results = append(results, "pr is not mergable")
+		if !isMergeable {
+			fmt.Println("pr is not mergeable")
+			results = append(results, "pr is not mergeable")
 		} else {
 			for _, module := range modules {
 				applyResult, err := t.businessLogic.TerraformApply(ctx, module)
@@ -195,8 +195,8 @@ func (t *impl) TerraformInPR(
 	switch {
 	case planOnly && diff:
 		return errordefcli.NewCLIError(2, "diff at `terraform plan`")
-	case !planOnly && !isMergable:
-		return errordefcli.NewCLIError(3, "cannot exec `terraform apply` because PR is not mergable")
+	case !planOnly && !isMergeable:
+		return errordefcli.NewCLIError(3, "cannot exec `terraform apply` because PR is not mergeable")
 	}
 
 	return nil
@@ -228,7 +228,6 @@ func (t *impl) TerraformPlanAllModules(
 	}
 
 	diff := false
-	results := []fmt.Stringer{}
 	for _, module := range modules {
 		planResult, err := t.businessLogic.TerraformPlan(ctx, module)
 		if err != nil {
@@ -238,8 +237,6 @@ func (t *impl) TerraformPlanAllModules(
 		if planResult.IsPlanDiff {
 			diff = true
 		}
-
-		results = append(results, planResult)
 	}
 
 	if diff {

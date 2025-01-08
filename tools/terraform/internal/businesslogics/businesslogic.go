@@ -41,7 +41,7 @@ type BusinessLogic interface {
 		repo string,
 		pr int,
 	) ([]string, error)
-	IsPRMergable(
+	IsPRMergeable(
 		ctx context.Context,
 		owner string,
 		repo string,
@@ -216,7 +216,7 @@ func (t *impl) FetchPathsChangedInPR(
 	return returned, nil
 }
 
-func (t *impl) IsPRMergable(
+func (t *impl) IsPRMergeable(
 	ctx context.Context,
 	owner string,
 	repo string,

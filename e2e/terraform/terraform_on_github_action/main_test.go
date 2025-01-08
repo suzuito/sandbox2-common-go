@@ -757,6 +757,33 @@ func TestTerraformOnGithubAction(t *testing.T) {
 							Request: types.MockRequest{
 								Method: types.StringMatcher{
 									Matcher: "ShouldEqual",
+									Value:   "GET",
+								},
+								Path: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "/repos/owner01/repo01/pulls/123",
+								},
+								Headers: types.MultiMapMatcher{
+									"E2e-Testid": {
+										{
+											Matcher: "ShouldEqual",
+											Value:   testID.String(),
+										},
+									},
+								},
+							},
+							Response: &types.MockResponse{
+								Status: http.StatusCreated,
+								Headers: types.MapStringSlice{
+									"Content-Type": types.StringSlice{"application/json"},
+								},
+								Body: `{"mergeable":true}`,
+							},
+						},
+						{
+							Request: types.MockRequest{
+								Method: types.StringMatcher{
+									Matcher: "ShouldEqual",
 									Value:   "POST",
 								},
 								Path: types.StringMatcher{
@@ -937,6 +964,33 @@ func TestTerraformOnGithubAction(t *testing.T) {
 							Request: types.MockRequest{
 								Method: types.StringMatcher{
 									Matcher: "ShouldEqual",
+									Value:   "GET",
+								},
+								Path: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "/repos/owner01/repo01/pulls/123",
+								},
+								Headers: types.MultiMapMatcher{
+									"E2e-Testid": {
+										{
+											Matcher: "ShouldEqual",
+											Value:   testID.String(),
+										},
+									},
+								},
+							},
+							Response: &types.MockResponse{
+								Status: http.StatusCreated,
+								Headers: types.MapStringSlice{
+									"Content-Type": types.StringSlice{"application/json"},
+								},
+								Body: `{"mergeable":true}`,
+							},
+						},
+						{
+							Request: types.MockRequest{
+								Method: types.StringMatcher{
+									Matcher: "ShouldEqual",
 									Value:   "POST",
 								},
 								Path: types.StringMatcher{
@@ -1064,6 +1118,201 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					"this is terraform command stderr",
 					"this is terraform command stderr",
 				)
+			},
+		},
+		{
+			Desc: "ng - [issue comment] - terraform apply - PR is not mergeable",
+			Setup: func(
+				t *testing.T,
+				testID e2ehelpers.TestID,
+				input *e2ehelpers.CLITestCaseV2Input,
+				expected *e2ehelpers.CLITestCaseV2Expected,
+			) {
+				require.NoError(t, smockerClient.PostMocks(
+					types.Mocks{
+						{
+							Request: types.MockRequest{
+								Method: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "GET",
+								},
+								Path: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "/repos/owner01/repo01/pulls/123/files",
+								},
+								QueryParams: types.MultiMapMatcher{
+									"page": types.StringMatcherSlice{
+										{Matcher: "ShouldEqual", Value: "1"},
+									},
+									"per_page": types.StringMatcherSlice{
+										{Matcher: "ShouldEqual", Value: "100"},
+									},
+								},
+								Headers: types.MultiMapMatcher{
+									"E2e-Testid": {
+										{
+											Matcher: "ShouldEqual",
+											Value:   testID.String(),
+										},
+									},
+								},
+							},
+							Response: &types.MockResponse{
+								Status: http.StatusCreated,
+								Headers: types.MapStringSlice{
+									"Content-Type": types.StringSlice{"application/json"},
+								},
+								Body: `[
+										    {"filename":"hoge/fuga.go"},
+										    {"filename":"case01/roots/r1/main.tf"}
+										]`,
+							},
+						},
+						{
+							Request: types.MockRequest{
+								Method: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "GET",
+								},
+								Path: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "/repos/owner01/repo01/pulls/123",
+								},
+								Headers: types.MultiMapMatcher{
+									"E2e-Testid": {
+										{
+											Matcher: "ShouldEqual",
+											Value:   testID.String(),
+										},
+									},
+								},
+							},
+							Response: &types.MockResponse{
+								Status: http.StatusCreated,
+								Headers: types.MapStringSlice{
+									"Content-Type": types.StringSlice{"application/json"},
+								},
+								Body: `{"mergeable":false}`,
+							},
+						},
+						{
+							Request: types.MockRequest{
+								Method: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "POST",
+								},
+								Path: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "/repos/owner01/repo01/issues/123/comments",
+								},
+								Headers: types.MultiMapMatcher{
+									"E2e-Testid": {
+										{
+											Matcher: "ShouldEqual",
+											Value:   testID.String(),
+										},
+									},
+								},
+							},
+							Response: &types.MockResponse{
+								Status: http.StatusCreated,
+								Headers: types.MapStringSlice{
+									"Content-Type": types.StringSlice{"application/json"},
+								},
+								Body: `{}`,
+							},
+						},
+					},
+					false,
+				))
+
+				fcmd := commandFaker.AddInTest(t, domains.Behaviors{
+					{
+						Type: domains.BehaviorTypeStdoutStderrExitCode,
+						BehaviorStdoutStderrExitCode: &domains.BehaviorStdoutStderrExitCode{
+							Stdout: "this is terraform command stdout\n",
+							Stderr: "this is terraform command stderr\n",
+						},
+					},
+					{
+						Type: domains.BehaviorTypeStdoutStderrExitCode,
+						BehaviorStdoutStderrExitCode: &domains.BehaviorStdoutStderrExitCode{
+							Stdout:   "this is terraform command stdout\n",
+							Stderr:   "this is terraform command stderr\n",
+							ExitCode: 2,
+						},
+					},
+					{
+						Type: domains.BehaviorTypeStdoutStderrExitCode,
+						BehaviorStdoutStderrExitCode: &domains.BehaviorStdoutStderrExitCode{
+							Stdout: "this is terraform command stdout\n",
+							Stderr: "this is terraform command stderr\n",
+						},
+					},
+				})
+
+				input.Envs = append(
+					envs,
+					"GITHUB_TOKEN=foo",
+					fmt.Sprintf("FILE_PATH_TERRAFORM=%s", fcmd.DirPath().FilePathCommand()),
+				)
+				input.Args = []string{
+					"-event-name", "issue_comment",
+					"-event-path", e2ehelpers.MustWriteFileAtRandomPath("/tmp", []byte(`{
+					    "comment": {"body": "///terraform apply"},
+						"issue": {"number":123, "pull_request":{}},
+						"repository":{
+						  "name": "repo01",
+						  "owner": {
+						    "login": "owner01"
+						  }
+						}
+					}`)),
+					"-d", fmt.Sprintf("%s/ghrepo01/case01", dirPathTestdata),
+					"-git-rootdir", fmt.Sprintf("%s/ghrepo01", dirPathTestdata),
+				}
+
+				expected.Stdout = e2ehelpers.NewLines(
+					"",
+					"*************",
+					"*************",
+					"*************",
+					"==== CMD ====",
+					fmt.Sprintf(
+						"%s -chdir=%s/ghrepo01/case01/roots/r1 init -no-color",
+						fcmd.DirPath().FilePathCommand(),
+						dirPathTestdata,
+					),
+					"==== OUT ====",
+					"this is terraform command stdout",
+					"==== END ====",
+					"exit with 0",
+					"",
+					"",
+					"*************",
+					"*************",
+					"*************",
+					"==== CMD ====",
+					fmt.Sprintf(
+						"%s -chdir=%s/ghrepo01/case01/roots/r1 plan -no-color -detailed-exitcode",
+						fcmd.DirPath().FilePathCommand(),
+						dirPathTestdata,
+					),
+					"==== OUT ====",
+					"this is terraform command stdout",
+					"==== END ====",
+					"exit with 2",
+					"",
+					"pr is not mergeable",
+				)
+
+				expected.Stderr = e2ehelpers.NewLines(
+					"this is terraform command stderr",
+					"this is terraform command stderr",
+					"cannot exec `terraform apply` because PR is not mergeable",
+				)
+
+				expected.ExitCode = 3
 			},
 		},
 		{
@@ -1353,6 +1602,33 @@ func TestTerraformOnGithubAction(t *testing.T) {
 										    {"filename":"hoge/fuga.go"},
 										    {"filename":"case01/roots/r1/main.tf"}
 										]`,
+							},
+						},
+						{
+							Request: types.MockRequest{
+								Method: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "GET",
+								},
+								Path: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "/repos/owner01/repo01/pulls/123",
+								},
+								Headers: types.MultiMapMatcher{
+									"E2e-Testid": {
+										{
+											Matcher: "ShouldEqual",
+											Value:   testID.String(),
+										},
+									},
+								},
+							},
+							Response: &types.MockResponse{
+								Status: http.StatusCreated,
+								Headers: types.MapStringSlice{
+									"Content-Type": types.StringSlice{"application/json"},
+								},
+								Body: `{"mergeable":true}`,
 							},
 						},
 						{
