@@ -43,11 +43,13 @@ func main() {
 	var eventPath string
 	var dirPathBase string
 	var dirPathRootGit string
+	var autoMerge bool
 
 	flag.StringVar(&eventName, "event-name", "", "Event name of GitHub Action")
 	flag.StringVar(&eventPath, "event-path", "", "Event path of GitHub Action")
 	flag.StringVar(&dirPathBase, "d", "", "Base directory path")
 	flag.StringVar(&dirPathRootGit, "git-rootdir", "", "Base directory path of git")
+	flag.BoolVar(&autoMerge, "automerge", false, "Automerge PR after apply is succeeded")
 	flag.Usage = usage
 
 	flag.Parse()
@@ -93,12 +95,29 @@ func main() {
 	ctx := context.Background()
 
 	uc := inject.NewUsecase(&env)
-	if err := uc.TerraformOnGithubAction(
-		ctx,
-		dirPathBase,
-		dirPathRootGit,
-		arg,
-	); err != nil {
+	switch arg.TargetType {
+	case terraformexe.PlanAll:
+		err = uc.TerraformPlanAllModules(
+			ctx,
+			dirPathBase,
+			dirPathRootGit,
+		)
+	case terraformexe.InPR:
+		err = uc.TerraformInPR(
+			ctx,
+			dirPathBase,
+			dirPathRootGit,
+			arg.GitHubOwner,
+			arg.GitHubRepository,
+			arg.GitHubPullRequestNumber,
+			arg.PlanOnly,
+			autoMerge,
+		)
+	default:
+		err = fmt.Errorf("target type is not supported: %d", arg.TargetType)
+	}
+
+	if err != nil {
 		if clierr, ok := errordefcli.AsCLIError(err); ok {
 			fmt.Fprintln(os.Stderr, clierr.Error())
 			os.Exit(clierr.ExitCode())

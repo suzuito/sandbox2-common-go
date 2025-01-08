@@ -6,14 +6,12 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"slices"
 	"strings"
 
 	"github.com/google/go-github/v68/github"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsimple"
 	"github.com/suzuito/sandbox2-common-go/libs/terrors"
-	"github.com/suzuito/sandbox2-common-go/libs/utils"
 	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/reporter"
 	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/rule"
 	"github.com/suzuito/sandbox2-common-go/tools/terraform/internal/domains/terraformexe"
@@ -43,12 +41,24 @@ type BusinessLogic interface {
 		repo string,
 		pr int,
 	) ([]string, error)
+	IsPRMergeable(
+		ctx context.Context,
+		owner string,
+		repo string,
+		pr int,
+	) (bool, error)
+	MergePR(
+		ctx context.Context,
+		owner string,
+		repo string,
+		pr int,
+	) error
 	CommentResults(
 		ctx context.Context,
 		owner string,
 		repo string,
 		issueNumber int,
-		results []fmt.Stringer,
+		results []string,
 	) error
 	TerraformInit(
 		ctx context.Context,
@@ -212,22 +222,54 @@ func (t *impl) FetchPathsChangedInPR(
 	return returned, nil
 }
 
+func (t *impl) IsPRMergeable(
+	ctx context.Context,
+	owner string,
+	repo string,
+	prNumber int,
+) (bool, error) {
+	pr, _, err := t.GithubPullRequestsService.Get(ctx, owner, repo, prNumber)
+	if err != nil {
+		return false, terrors.Errorf("failed to GithubPullRequestsService.Get: %w", err)
+	}
+
+	if pr.Mergeable == nil {
+		return false, nil
+	}
+
+	return *pr.Mergeable, nil
+}
+
+func (t *impl) MergePR(
+	ctx context.Context,
+	owner string,
+	repo string,
+	pr int,
+) error {
+	if _, _, err := t.GithubPullRequestsService.Merge(
+		ctx,
+		owner,
+		repo,
+		pr,
+		fmt.Sprintf("Merge pull request %d automatically", pr),
+		&github.PullRequestOptions{},
+	); err != nil {
+		return terrors.Errorf("failed to GithubPullRequestsService.Merge: %w", err)
+	}
+	return nil
+}
+
 func (t *impl) CommentResults(
 	ctx context.Context,
 	owner string,
 	repo string,
 	issueNumber int,
-	results []fmt.Stringer,
+	results []string,
 ) error {
 	bodyString := fmt.Sprintf(
 		"```\n%s```\n",
 		strings.Join(
-			slices.Collect(
-				utils.Map(
-					func(v fmt.Stringer) string { return v.String() },
-					slices.Values(results),
-				),
-			),
+			results,
 			"\n----------------------------------------\n"+
 				"----------------------------------------\n"+
 				"----------------------------------------\n",
