@@ -1992,7 +1992,6 @@ func TestTerraformOnGithubAction(t *testing.T) {
 					"==== END ====",
 					"exit with 0",
 					"",
-					"",
 					"PR is merged",
 				)
 

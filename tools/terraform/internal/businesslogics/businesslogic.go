@@ -47,6 +47,12 @@ type BusinessLogic interface {
 		repo string,
 		pr int,
 	) (bool, error)
+	MergePR(
+		ctx context.Context,
+		owner string,
+		repo string,
+		pr int,
+	) error
 	CommentResults(
 		ctx context.Context,
 		owner string,
@@ -232,6 +238,25 @@ func (t *impl) IsPRMergeable(
 	}
 
 	return *pr.Mergeable, nil
+}
+
+func (t *impl) MergePR(
+	ctx context.Context,
+	owner string,
+	repo string,
+	pr int,
+) error {
+	if _, _, err := t.GithubPullRequestsService.Merge(
+		ctx,
+		owner,
+		repo,
+		pr,
+		fmt.Sprintf("Merge pull request %d automatically", pr),
+		&github.PullRequestOptions{},
+	); err != nil {
+		terrors.Errorf("failed to GithubPullRequestsService.Merge: %w", err)
+	}
+	return nil
 }
 
 func (t *impl) CommentResults(

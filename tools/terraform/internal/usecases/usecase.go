@@ -32,6 +32,7 @@ type Usecase interface {
 		githubRepo string,
 		githubPRNumber int,
 		planOnly bool,
+		autoMerge bool,
 	) error
 	TerraformPlanAllModules(
 		ctx context.Context,
@@ -99,6 +100,7 @@ func (t *impl) TerraformInPR(
 	githubRepo string,
 	githubPRNumber int,
 	planOnly bool,
+	autoMerge bool,
 ) error {
 	modules, err := t.businessLogic.ParseBaseDir(ctx, dirPathBase)
 	if err != nil {
@@ -190,6 +192,18 @@ func (t *impl) TerraformInPR(
 		results,
 	); err != nil {
 		return terrors.Wrap(err)
+	}
+
+	if autoMerge {
+		if err := t.businessLogic.MergePR(
+			ctx,
+			githubOwner,
+			githubRepo,
+			githubPRNumber,
+		); err != nil {
+			return terrors.Wrap(err)
+		}
+		fmt.Println("PR is merged")
 	}
 
 	switch {
