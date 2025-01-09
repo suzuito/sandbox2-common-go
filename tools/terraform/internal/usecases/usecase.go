@@ -194,7 +194,7 @@ func (t *impl) TerraformInPR(
 		return terrors.Wrap(err)
 	}
 
-	if autoMerge {
+	if !planOnly && autoMerge {
 		if err := t.businessLogic.MergePR(
 			ctx,
 			githubOwner,
