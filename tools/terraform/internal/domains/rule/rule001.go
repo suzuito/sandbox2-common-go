@@ -52,7 +52,11 @@ func (t *Rule001) Check(
 			}
 		}
 
-		dirPathRel, err := filepath.Rel(dirPathBaes, module.AbsPath.String())
+		dirAbsPathBase, err := filepath.Abs(dirPathBaes)
+		if err != nil {
+			return false, terrors.Errorf("invalid filepath.Abs: %w", err)
+		}
+		dirPathRel, err := filepath.Rel(dirAbsPathBase, module.AbsPath.String())
 		if err != nil {
 			return false, terrors.Errorf("invalid filepath.Rel: %w", err)
 		}
