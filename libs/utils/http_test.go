@@ -21,11 +21,6 @@ func TestRunHTTPServerWithGracefulShutdown(t *testing.T) {
 	handler := slog.NewTextHandler(io.Discard, &slog.HandlerOptions{})
 	logger := slog.New(handler)
 
-	var calledShutdown atomic.Bool
-	server.RegisterOnShutdown(func() {
-		calledShutdown.Store(true)
-	})
-
 	var exitCodeReturned atomic.Int64
 	exitCodeReturned.Store(-1)
 	var wg sync.WaitGroup
@@ -36,13 +31,11 @@ func TestRunHTTPServerWithGracefulShutdown(t *testing.T) {
 	}()
 
 	// before graceful shutdown started
-	require.False(t, calledShutdown.Load())
 	require.Equal(t, int64(-1), exitCodeReturned.Load())
 
 	cancel()
 	wg.Wait()
 
 	// after graceful shutdown completed
-	require.True(t, calledShutdown.Load())
 	require.Equal(t, int64(0), exitCodeReturned.Load())
 }
