@@ -23,6 +23,9 @@ func (c *PlaywrightTestCaseForSSR) Run(t *testing.T) {
 	testID := NewTestID()
 	exe := PlaywrightTestCaseForSSRExec{}
 	c.Setup(t, testID, &exe)
+	if c.Teardown != nil {
+		c.Teardown(t, testID)
+	}
 
 	pw, err := playwright.Run()
 	require.NoError(t, err)
