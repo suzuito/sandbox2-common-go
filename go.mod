@@ -12,7 +12,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/hcl/v2 v2.23.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/playwright-community/playwright-go v0.4902.0
+	github.com/playwright-community/playwright-go v0.5001.0
 	github.com/smocker-dev/smocker v0.0.0-20240320000158-310c15349c41
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/pkgsite v0.0.0-20241206194728-dc08416c8122
