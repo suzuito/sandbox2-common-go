@@ -2,7 +2,7 @@ module github.com/suzuito/sandbox2-common-go
 
 go 1.23.0
 
-toolchain go1.23.4
+toolchain go1.24.0
 
 require (
 	github.com/Masterminds/semver/v3 v3.3.1
@@ -15,7 +15,7 @@ require (
 	github.com/playwright-community/playwright-go v0.5001.0
 	github.com/smocker-dev/smocker v0.0.0-20240320000158-310c15349c41
 	github.com/stretchr/testify v1.10.0
-	golang.org/x/pkgsite v0.0.0-20241206194728-dc08416c8122
+	golang.org/x/pkgsite v0.0.0-20250214205047-dd488e5da97a
 )
 
 require (
@@ -38,6 +38,8 @@ require (
 	github.com/gohugoio/hugo v0.139.4 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/google/licensecheck v0.3.1 // indirect
+	github.com/google/safehtml v0.0.3-0.20211026203422-d6f0e11a5516 // indirect
 	github.com/invopop/yaml v0.3.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -53,11 +55,18 @@ require (
 	github.com/tdewolff/parse/v2 v2.7.15 // indirect
 	github.com/teris-io/shortid v0.0.0-20171029131806-771a37caa5cf // indirect
 	github.com/zclconf/go-cty v1.14.4 // indirect
-	golang.org/x/mod v0.22.0 // indirect
-	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
-	golang.org/x/tools v0.28.0 // indirect
+	golang.org/x/mod v0.23.0 // indirect
+	golang.org/x/net v0.35.0 // indirect
+	golang.org/x/sync v0.11.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/tools v0.30.0 // indirect
 	google.golang.org/protobuf v1.35.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	rsc.io/markdown v0.0.0-20231214224604-88bb533a6020 // indirect
+)
+
+tool (
+	github.com/air-verse/air
+	golang.org/x/pkgsite/cmd/pkgsite
 )

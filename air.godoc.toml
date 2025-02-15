@@ -1,5 +1,5 @@
 [build]
-full_bin = "$(go env GOPATH)/bin/pkgsite"
+full_bin = "go tool pkgsite"
 args_bin = [
     "-http=':6060'"
 ]

@@ -1,5 +1,3 @@
-BIN_AIR = $(shell go env GOPATH)/bin/air
-BIN_PKGSITE = $(shell go env GOPATH)/bin/pkgsite
 BIN_GOLANGCI_LINT = $(shell go env GOPATH)/bin/golangci-lint
 
 GO_SOURCES=$(shell find . -name "*.go")
@@ -7,22 +5,18 @@ GO_SOURCES=$(shell find . -name "*.go")
 .PHONY: mac-init
 mac-init:
 
+# golangci-lint だけは go.mod で管理しない。`go install` によるインストールが非推奨とされているため
+# https://golangci-lint.run/welcome/install/#install-from-sources
 $(BIN_GOLANGCI_LINT): Makefile
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.62.2
-
-$(BIN_AIR):
-	go install github.com/air-verse/air
-
-$(BIN_PKGSITE):
-	go install golang.org/x/pkgsite/cmd/pkgsite
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.64.5
 
 .PHONY: lint
 lint: $(BIN_GOLANGCI_LINT)
 	$(BIN_GOLANGCI_LINT) run ./...
 
 .PHONY: godoc
-godoc: $(BIN_AIR) $(BIN_PKGSITE)
-	$(BIN_AIR) -c air.godoc.toml
+godoc:
+	go tool air -c air.godoc.toml
 
 .PHONY: test
 test:
