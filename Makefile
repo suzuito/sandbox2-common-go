@@ -8,7 +8,7 @@ mac-init:
 # golangci-lint だけは go.mod で管理しない。`go install` によるインストールが非推奨とされているため
 # https://golangci-lint.run/welcome/install/#install-from-sources
 $(BIN_GOLANGCI_LINT): Makefile
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.62.2
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.64.5
 
 .PHONY: lint
 lint: $(BIN_GOLANGCI_LINT)
