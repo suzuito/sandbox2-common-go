@@ -160,6 +160,71 @@ func TestA(t *testing.T) {
 			},
 		},
 		{
+			Desc: "ok - increment major (not 'v' prefix)",
+			Setup: func(t *testing.T, testID e2ehelpers.TestID, input *e2ehelpers.CLITestCaseV2Input, expected *e2ehelpers.CLITestCaseV2Expected) {
+				fcmd := commandFaker.AddInTest(t, domains.Behaviors{
+					{
+						Type: domains.BehaviorTypeStdoutStderrExitCode,
+						BehaviorStdoutStderrExitCode: &domains.BehaviorStdoutStderrExitCode{
+							Stdout: e2ehelpers.NewLines(
+								"hoge-v1.1.2",
+								"hoge-v1.1.3",
+								"hoge-v1.1.4",
+							),
+						},
+					},
+				})
+
+				require.NoError(t, smockerClient.PostMocks(
+					types.Mocks{
+						{
+							Request: types.MockRequest{
+								Method: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "POST",
+								},
+								Path: types.StringMatcher{
+									Matcher: "ShouldEqual",
+									Value:   "/repos/owner01/repo01/releases",
+								},
+								Headers: types.MultiMapMatcher{
+									"E2e-Testid": {
+										{
+											Matcher: "ShouldEqual",
+											Value:   testID.String(),
+										},
+									},
+								},
+							},
+							Response: &types.MockResponse{
+								Status: http.StatusCreated,
+								Headers: types.MapStringSlice{
+									"Content-Type": types.StringSlice{"application/json"},
+								},
+								Body: `{}`,
+							},
+						},
+					},
+					false,
+				))
+
+				input.Envs = envs
+				input.Args = []string{
+					"-git", fcmd.DirPath().FilePathCommand(),
+					"-prefix", "hoge-v",
+					"-owner", "owner01",
+					"-repo", "repo01",
+					"-branch", "branch01",
+					"-token", "token01",
+					"-increment", "major",
+				}
+
+				expected.Stdout = e2ehelpers.NewLines(
+					"created release draft hoge-v2.0.0",
+				)
+			},
+		},
+		{
 			Desc: "ok - increment minor",
 			Setup: func(t *testing.T, testID e2ehelpers.TestID, input *e2ehelpers.CLITestCaseV2Input, expected *e2ehelpers.CLITestCaseV2Expected) {
 				fcmd := commandFaker.AddInTest(t, domains.Behaviors{
