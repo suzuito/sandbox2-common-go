@@ -699,7 +699,7 @@ func TestTerraformOnGithubAction(t *testing.T) {
 				expected.Stderr = e2ehelpers.NewLines(
 					"this is terraform command stderr",
 					"this is terraform command stderr",
-					"diff at `terraform plan`",
+					"cli error: diff at `terraform plan`",
 				)
 
 				expected.ExitCode = 2
@@ -1309,7 +1309,7 @@ func TestTerraformOnGithubAction(t *testing.T) {
 				expected.Stderr = e2ehelpers.NewLines(
 					"this is terraform command stderr",
 					"this is terraform command stderr",
-					"cannot exec `terraform apply` because PR is not mergeable",
+					"cli error: cannot exec `terraform apply` because PR is not mergeable",
 				)
 
 				expected.ExitCode = 3
