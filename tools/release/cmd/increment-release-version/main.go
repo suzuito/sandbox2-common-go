@@ -117,7 +117,7 @@ func main() {
 		incrementType,
 	); err != nil {
 		code, message := errordefcli.Code(err, 125)
-		fmt.Println(os.Stderr, message)
+		fmt.Fprintln(os.Stderr, message)
 		os.Exit(int(code))
 	}
 }
