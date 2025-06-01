@@ -21,7 +21,7 @@ func (t *cliError) Unwrap() error {
 	return t.origin
 }
 
-func NewCLIErrorf(exitCode uint8, message string, args ...any) error {
+func Errorf(exitCode uint8, message string, args ...any) error {
 	return &cliError{
 		exitCode: exitCode,
 		origin:   fmt.Errorf(message, args...),

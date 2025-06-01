@@ -34,7 +34,7 @@ func (t *Impl) IncrementVersion(
 ) error {
 	incrementType := domains.IncrementType(incrementTypeString)
 	if err := incrementType.Validate(); err != nil {
-		return errordefcli.NewCLIErrorf(
+		return errordefcli.Errorf(
 			1,
 			"invalid increment type '%s'",
 			incrementType,

@@ -9,7 +9,7 @@ import (
 	errordefcli "github.com/suzuito/sandbox2-common-go/libs/errordefs/cli"
 )
 
-func TestErrordefcli(t *testing.T) {
+func TestErrorf(t *testing.T) {
 	type arg struct {
 		newFunc     func() error
 		defaultCode uint8
@@ -25,7 +25,7 @@ func TestErrordefcli(t *testing.T) {
 			desc: "ok - NewCLIErrorf",
 			arg: arg{
 				newFunc: func() error {
-					return errordefcli.NewCLIErrorf(1, "dummy1")
+					return errordefcli.Errorf(1, "dummy1")
 				},
 			},
 			expectedCodeCode:    1,
@@ -35,7 +35,7 @@ func TestErrordefcli(t *testing.T) {
 			desc: "ok - NewCLIErrorf - can use %%w",
 			arg: arg{
 				newFunc: func() error {
-					return errordefcli.NewCLIErrorf(1, "dummy1: %w", os.ErrExist)
+					return errordefcli.Errorf(1, "dummy1: %w", os.ErrExist)
 				},
 			},
 			expectedCodeCode:    1,
@@ -63,6 +63,6 @@ func TestErrordefcli(t *testing.T) {
 }
 
 func TestErrordefcliUnwrap(t *testing.T) {
-	err := errordefcli.NewCLIErrorf(1, "dummy: %w", os.ErrExist)
+	err := errordefcli.Errorf(1, "dummy: %w", os.ErrExist)
 	assert.True(t, errors.Is(err, os.ErrExist))
 }
