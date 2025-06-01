@@ -317,7 +317,7 @@ func TestA(t *testing.T) {
 
 				expected.ExitCode = 2
 				expected.Stderr = e2ehelpers.NewLines(
-					"no existing git versions",
+					"cli error: no existing git versions",
 				)
 			},
 		},
@@ -341,7 +341,7 @@ func TestA(t *testing.T) {
 				}
 
 				expected.Stderr = e2ehelpers.NewLines(
-					"no existing git versions",
+					"cli error: no existing git versions",
 				)
 				expected.ExitCode = 2
 			},
@@ -370,7 +370,7 @@ func TestA(t *testing.T) {
 
 				expected.ExitCode = 3
 				expected.Stderr = e2ehelpers.NewLines(
-					"failed to git command with code 127",
+					"cli error: failed to git command with code 127",
 				)
 			},
 		},
@@ -471,7 +471,7 @@ func TestA(t *testing.T) {
 
 				expected.ExitCode = 1
 				expected.Stderr = e2ehelpers.NewLines(
-					"invalid increment type 'x'",
+					"cli error: invalid increment type 'x'",
 				)
 			},
 		},

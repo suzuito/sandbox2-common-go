@@ -53,7 +53,7 @@ func TestCheckTerraformRules(t *testing.T) {
 				)
 				expected.Stderr = strings.Join(
 					[]string{
-						"not pass\n",
+						"cli error: not pass\n",
 					},
 					"\n",
 				)
@@ -76,7 +76,7 @@ func TestCheckTerraformRules(t *testing.T) {
 				expected.ExitCode = 10
 				expected.Stderr = strings.Join(
 					[]string{
-						fmt.Sprintf("%s/caseXXX does not exist", dirPathTestdata),
+						fmt.Sprintf("cli error: %s/caseXXX does not exist", dirPathTestdata),
 					},
 					"\n",
 				)

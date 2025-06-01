@@ -43,12 +43,12 @@ func (t *Impl) IncrementVersion(
 	latestVersion, err := t.versionFetcher.GetLatestVersion(ctx, prefix)
 	var exitError *exec.ExitError
 	if errors.Is(err, gateways.ErrNoVersionExists) {
-		return errordefcli.NewCLIError(
+		return errordefcli.Errorf(
 			2,
 			"no existing git versions",
 		)
 	} else if errors.As(err, &exitError) {
-		return errordefcli.NewCLIErrorf(
+		return errordefcli.Errorf(
 			3,
 			"failed to git command with code %d",
 			exitError.ExitCode(),

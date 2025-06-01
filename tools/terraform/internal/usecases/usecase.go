@@ -73,7 +73,7 @@ func (t *impl) CheckTerraformRules(
 		return nil
 	}); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return errordefcli.NewCLIErrorf(
+			return errordefcli.Errorf(
 				10,
 				"%s does not exist",
 				dirPathBase,
@@ -86,7 +86,7 @@ func (t *impl) CheckTerraformRules(
 	if result, err := t.businessLogic.CheckRules(ctx, dirPathBase, modules, rules); err != nil {
 		return terrors.Errorf("failed to check rules: %w", err)
 	} else if !result {
-		return errordefcli.NewCLIError(5, "not pass")
+		return errordefcli.Errorf(5, "not pass")
 	}
 
 	return nil
@@ -208,9 +208,9 @@ func (t *impl) TerraformInPR(
 
 	switch {
 	case planOnly && diff:
-		return errordefcli.NewCLIError(2, "diff at `terraform plan`")
+		return errordefcli.Errorf(2, "diff at `terraform plan`")
 	case !planOnly && !isMergeable:
-		return errordefcli.NewCLIError(3, "cannot exec `terraform apply` because PR is not mergeable")
+		return errordefcli.Errorf(3, "cannot exec `terraform apply` because PR is not mergeable")
 	}
 
 	return nil
@@ -254,7 +254,7 @@ func (t *impl) TerraformPlanAllModules(
 	}
 
 	if diff {
-		return errordefcli.NewCLIError(2, "diff at `terraform plan`")
+		return errordefcli.Errorf(2, "diff at `terraform plan`")
 	}
 
 	return nil

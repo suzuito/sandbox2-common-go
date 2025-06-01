@@ -118,12 +118,8 @@ func main() {
 	}
 
 	if err != nil {
-		if clierr, ok := errordefcli.AsCLIError(err); ok {
-			fmt.Fprintln(os.Stderr, clierr.Error())
-			os.Exit(clierr.ExitCode())
-		}
-
-		fmt.Fprintf(os.Stderr, "%+v\n", err)
-		os.Exit(125)
+		code, message := errordefcli.Code(err, 125)
+		fmt.Fprintln(os.Stderr, message)
+		os.Exit(int(code))
 	}
 }
