@@ -1,7 +1,5 @@
 BIN_GOLANGCI_LINT = $(shell go env GOPATH)/bin/golangci-lint
 
-GO_SOURCES=$(shell find . -name "*.go")
-
 .PHONY: mac-init
 mac-init:
 
@@ -66,3 +64,19 @@ test-ci:
 include Makefile.tools.release.mk
 include Makefile.tools.terraform.mk
 include Makefile.tools.fakecmd.mk
+
+GOOS = $(shell go env GOOS)
+GOARCH = $(shell go env GOARCH)
+
+.PHONY: build
+build:
+	rm -rf dist/prd/$(GOOS)/$(GOARCH)
+	mkdir -p dist/prd/$(GOOS)/$(GOARCH)
+	make tools/fakecmd/dist/prd/fakecmd
+	mv tools/fakecmd/dist/prd/fakecmd dist/prd/$(GOOS)/$(GOARCH)/
+	make tools/release/dist/prd/increment-release-version
+	mv tools/release/dist/prd/increment-release-version dist/prd/$(GOOS)/$(GOARCH)/
+	make tools/terraform/dist/prd/check-terraform-rules
+	mv tools/terraform/dist/prd/check-terraform-rules dist/prd/$(GOOS)/$(GOARCH)/
+	make tools/terraform/dist/prd/terraform_on_github_action
+	mv tools/terraform/dist/prd/terraform_on_github_action dist/prd/$(GOOS)/$(GOARCH)/
