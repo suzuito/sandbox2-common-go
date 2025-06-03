@@ -20,3 +20,5 @@ jobs:
       - run: GOOS=${{ matrix.GOOS }} GOARCH=${{ matrix.GOARCH }} make build
       - run: cd dist/prd/${{ matrix.GOOS }}/${{ matrix.GOARCH }} && tar czvf tools-${{ matrix.GOOS }}-${{ matrix.GOARCH }}.tar.gz *
       - run: gh release upload ${{github.event.release.tag_name}} tools-${{ matrix.GOOS }}-${{ matrix.GOARCH }}.tar.gz
+        env:
+          GH_TOKEN: ${{ github.token }}
