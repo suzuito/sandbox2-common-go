@@ -8,6 +8,8 @@ import (
 	"github.com/suzuito/sandbox2-common-go/libs/terrors"
 )
 
+const TraceInfosKey = "traceInfos"
+
 type CustomHandler struct {
 	slog.Handler
 }
@@ -21,7 +23,7 @@ func (t *CustomHandler) Handle(ctx context.Context, r slog.Record) error {
 				for _, st := range terr.StackTrace() {
 					traceInfos = append(traceInfos, fmt.Sprintf("%s:%d", st.Filename, st.Line))
 				}
-				r.AddAttrs(slog.Attr{Key: "traceInfos", Value: slog.AnyValue(traceInfos)})
+				r.AddAttrs(slog.Attr{Key: TraceInfosKey, Value: slog.AnyValue(traceInfos)})
 			}
 			return false
 		}
