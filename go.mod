@@ -5,7 +5,7 @@ go 1.23.0
 toolchain go1.24.0
 
 require (
-	github.com/Masterminds/semver/v3 v3.3.1
+	github.com/Masterminds/semver/v3 v3.4.0
 	github.com/air-verse/air v1.61.7
 	github.com/google/go-github/v67 v67.0.0
 	github.com/google/go-github/v68 v68.0.0
