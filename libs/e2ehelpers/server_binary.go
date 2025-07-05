@@ -86,7 +86,6 @@ func RunServer(
 	}
 
 	if err := healthCheckFunc(); err != nil {
-		printStdoutStderr()
 		fmt.Fprintf(os.Stderr, "health check error: %s\n", err.Error())
 		return shutdown
 	}
