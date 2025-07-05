@@ -76,7 +76,10 @@ func RunServer(
 		}
 
 		if err := cmd.Wait(); err != nil {
-			return 0, "", "", err
+			var exiterr *exec.ExitError
+			if !errors.As(err, &exiterr) {
+				return 0, "", "", err
+			}
 		}
 
 		return cmd.ProcessState.ExitCode(), stdout.String(), stderr.String(), nil
