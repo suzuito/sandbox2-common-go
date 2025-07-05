@@ -22,7 +22,7 @@ func RunServer(
 	filePathBin string,
 	input *RunServerInput,
 	healthCheckFunc func() error,
-) func() error {
+) func() (exitCode int, stdout string, stderr string, err error) {
 	cmd := exec.CommandContext(
 		ctx,
 		filePathBin,
@@ -71,20 +71,20 @@ func RunServer(
 		panic(fmt.Errorf("health check error: %w", err))
 	}
 
-	return func() error {
+	return func() (int, string, string, error) {
 		defer func() {
 			printStdoutStderr()
 		}()
 
 		if err := cmd.Process.Signal(os.Interrupt); err != nil {
-			return err
+			return 0, "", "", err
 		}
 
 		if err := cmd.Wait(); err != nil {
-			return err
+			return 0, "", "", err
 		}
 
-		return nil
+		return cmd.ProcessState.ExitCode(), stdout.String(), stderr.String(), nil
 	}
 }
 
