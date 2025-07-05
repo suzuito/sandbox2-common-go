@@ -66,12 +66,7 @@ func RunServer(
 		}
 	}
 
-	if err := healthCheckFunc(); err != nil {
-		printStdoutStderr()
-		panic(fmt.Errorf("health check error: %w", err))
-	}
-
-	return func() (int, string, string, error) {
+	shutdown := func() (int, string, string, error) {
 		defer func() {
 			printStdoutStderr()
 		}()
@@ -86,6 +81,14 @@ func RunServer(
 
 		return cmd.ProcessState.ExitCode(), stdout.String(), stderr.String(), nil
 	}
+
+	if err := healthCheckFunc(); err != nil {
+		printStdoutStderr()
+		fmt.Fprintf(os.Stderr, "health check error: %w\n")
+		return shutdown
+	}
+
+	return shutdown
 }
 
 func CheckHTTPServerHealth(
