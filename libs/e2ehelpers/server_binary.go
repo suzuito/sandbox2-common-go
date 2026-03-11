@@ -22,7 +22,11 @@ func RunServer(
 	filePathBin string,
 	input *RunServerInput,
 	healthCheckFunc func() error,
-) func() (exitCode int, stdout string, stderr string, err error) {
+) (func() (exitCode int, stdout string, stderr string, err error), bool) {
+	if filePathBin == "" {
+		panic("filePathBin is empty")
+	}
+
 	cmd := exec.CommandContext(
 		ctx,
 		filePathBin,
@@ -87,10 +91,10 @@ func RunServer(
 
 	if err := healthCheckFunc(); err != nil {
 		fmt.Fprintf(os.Stderr, "health check error: %s\n", err.Error())
-		return shutdown
+		return shutdown, false
 	}
 
-	return shutdown
+	return shutdown, true
 }
 
 func CheckHTTPServerHealth(
@@ -108,8 +112,11 @@ func CheckHTTPServerHealth(
 		case <-ctx.Done():
 			return errors.New("health check is failed")
 		default:
+			fmt.Printf("health check GET %s\n", u)
+
 			res, err := cli.Get(u)
 			if err != nil {
+				fmt.Printf("failed to health check: %v\n", err)
 				continue
 			}
 
@@ -117,6 +124,8 @@ func CheckHTTPServerHealth(
 			if res.StatusCode == http.StatusOK {
 				return nil
 			}
+
+			fmt.Printf("failed to health check with http error: %d\n", res.StatusCode)
 		}
 	}
 }
