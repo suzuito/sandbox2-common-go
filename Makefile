@@ -1,4 +1,4 @@
-GO_SOURCES=$(shell find . -name "*.go")
+GO_SOURCES=$(shell find . -name "*.go" -or -name "go.mod")
 BIN_GOLANGCI_LINT = $(shell go env GOPATH)/bin/golangci-lint
 
 .PHONY: mac-init
