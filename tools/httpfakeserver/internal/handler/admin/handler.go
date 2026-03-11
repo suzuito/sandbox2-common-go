@@ -54,6 +54,6 @@ func GetAdminCase(caseRepo *mock.Repository) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write(body)
+		w.Write(body) // nolint:errcheck
 	}
 }

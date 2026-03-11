@@ -18,7 +18,7 @@ type Request struct {
 
 func (r *Request) ID() string {
 	header := strings.Builder{}
-	r.Header.Write(&header)
+	r.Header.Write(&header) // nolint:errcheck
 	src := strings.ToLower(r.Method) + r.Path + header.String() + r.Query.Encode()
 	return src
 }

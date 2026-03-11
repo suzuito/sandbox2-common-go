@@ -41,7 +41,7 @@ func testMain(m *testing.M) int {
 		},
 		healthCheck(ctx),
 	)
-	defer shutdown()
+	defer shutdown() // nolint:errcheck
 
 	if !okHealthCheck {
 		return 1
