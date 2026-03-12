@@ -32,8 +32,8 @@ func TestFakeCommand_Init(t *testing.T) {
 	dirPath := domains.DirPathFakeCommand(fmt.Sprintf("/tmp/%s", uuid.NewString()))
 
 	t.Cleanup(func() {
-		os.RemoveAll(filePathFakeCMD)
-		os.RemoveAll(dirPath.String())
+		os.RemoveAll(filePathFakeCMD)  //nolint:errcheck
+		os.RemoveAll(dirPath.String()) //nolint:errcheck
 	})
 
 	testCases := []struct {
@@ -72,7 +72,7 @@ func TestFakeCommand_Init(t *testing.T) {
 			inputBehaviors:       domains.Behaviors{},
 			setup: func(t *testing.T) {
 				dirPath := domains.DirPathFakeCommand("/tmp/case003")
-				os.RemoveAll(dirPath.String())
+				os.RemoveAll(dirPath.String()) //nolint:errcheck
 				e2ehelpers.MustMkdir(dirPath.String())
 				e2ehelpers.MustWriteFile(dirPath.FilePathCommand(), []byte{})
 			},

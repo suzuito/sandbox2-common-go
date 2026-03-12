@@ -22,7 +22,7 @@ func (t *Rule001) Check(
 	modules module.Modules,
 	reporter reporter.Reporter,
 ) (bool, error) {
-	var result bool = true
+	result := true
 	for _, module := range modules {
 		if !module.IsRoot {
 			continue

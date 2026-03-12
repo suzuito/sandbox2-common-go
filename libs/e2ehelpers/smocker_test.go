@@ -37,7 +37,7 @@ func Test_SmockerClient_PostMocks(t *testing.T) {
 			inputReset: true,
 			server: httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusBadRequest)
-				fmt.Fprintf(w, "TEST")
+				fmt.Fprintf(w, "TEST") //nolint:errcheck
 			})),
 			wantErr:        true,
 			expectedErrMsg: "http error: status=400 body=TEST",
