@@ -14,7 +14,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/playwright-community/playwright-go v0.5200.0
 	github.com/smocker-dev/smocker v0.0.0-20240320000158-310c15349c41
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	golang.org/x/pkgsite v0.0.0-20250214205047-dd488e5da97a
 )
 
