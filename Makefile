@@ -20,7 +20,7 @@ godoc:
 .PHONY: test
 test:
 	mkdir -p cov/ && rm -f cov/*
-	go test -cover ./libs/... ./tools/... -args -test.gocoverdir=$(abspath cov)
+	PATH=$$(go env GOROOT)/bin:$$PATH go test -cover ./libs/... ./tools/... -args -test.gocoverdir=$(abspath cov)
 	sh report-gocovdir.sh cov
 
 .PHONY: e2e
