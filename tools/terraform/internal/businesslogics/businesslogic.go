@@ -174,7 +174,7 @@ func (t *impl) CheckRules(
 	modules module.Modules,
 	rules rule.Rules,
 ) (bool, error) {
-	var result bool = false
+	result := false
 	for _, rule := range rules {
 		resultEach, err := rule.Check(ctx, dirPathBase, modules, t.Reporter)
 		if err != nil {
