@@ -19,6 +19,6 @@ func HandleFunc(caseRepo *mock.Repository) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusNotImplemented)
-		fmt.Fprintf(w, "no matched to cases")
+		fmt.Fprintf(w, "no matched to cases") //nolint:errcheck
 	}
 }

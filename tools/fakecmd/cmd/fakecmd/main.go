@@ -53,10 +53,10 @@ func getLock(
 	if err != nil {
 		return nil, fmt.Errorf("failed to os.Create: %s: %w", filePathProcessing, err)
 	}
-	defer fileProcessing.Close()
+	defer fileProcessing.Close() //nolint:errcheck
 
 	return func() {
-		os.Remove(filePathProcessing)
+		os.Remove(filePathProcessing) //nolint:errcheck
 	}, nil
 }
 
@@ -125,8 +125,8 @@ func main1() code {
 			return codeFakeCMDError
 		}
 		defer closeState()
-		fmt.Fprint(os.Stdout, behavior.BehaviorStdoutStderrExitCode.Stdout)
-		fmt.Fprint(os.Stderr, behavior.BehaviorStdoutStderrExitCode.Stderr)
+		fmt.Fprint(os.Stdout, behavior.BehaviorStdoutStderrExitCode.Stdout) //nolint:errcheck
+		fmt.Fprint(os.Stderr, behavior.BehaviorStdoutStderrExitCode.Stderr) //nolint:errcheck
 		return code(behavior.BehaviorStdoutStderrExitCode.ExitCode)
 	default:
 		// unknown type

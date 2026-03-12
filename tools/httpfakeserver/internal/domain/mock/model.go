@@ -78,7 +78,7 @@ func (c Mock) WriteResponse(w http.ResponseWriter) {
 		}
 	}
 	w.WriteHeader(c.Response.Status)
-	fmt.Fprint(w, c.Response.Body)
+	fmt.Fprint(w, c.Response.Body) //nolint:errcheck
 }
 
 type Mocks []Mock

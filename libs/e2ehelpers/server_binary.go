@@ -120,7 +120,7 @@ func CheckHTTPServerHealth(
 				continue
 			}
 
-			res.Body.Close()
+			res.Body.Close() //nolint:errcheck
 			if res.StatusCode == http.StatusOK {
 				return nil
 			}

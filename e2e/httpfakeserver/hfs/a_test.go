@@ -107,7 +107,7 @@ func TestNormalCases(t *testing.T) {
 
 		res, err := cli.Do(req)
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer res.Body.Close() //nolint:errcheck
 
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		body, err := io.ReadAll(res.Body)
@@ -123,7 +123,7 @@ func TestNormalCases(t *testing.T) {
 
 		res, err := cli.Do(req)
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer res.Body.Close() //nolint:errcheck
 
 		assert.Equal(t, http.StatusNotImplemented, res.StatusCode)
 	})
@@ -136,7 +136,7 @@ func TestNormalCases(t *testing.T) {
 
 		res, err := cli.Do(req)
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer res.Body.Close() //nolint:errcheck
 
 		assert.Equal(t, http.StatusNotImplemented, res.StatusCode)
 	})
@@ -149,7 +149,7 @@ func TestNormalCases(t *testing.T) {
 
 		res, err := cli.Do(req)
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer res.Body.Close() //nolint:errcheck
 
 		assert.Equal(t, http.StatusNotImplemented, res.StatusCode)
 	})
@@ -164,12 +164,12 @@ func TestEdgeCases(t *testing.T) {
 	res, err := cli.Do(req)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusNoContent, res.StatusCode)
-	require.NoError(t, res.Body.Close())
+	require.NoError(t, res.Body.Close()) //nolint:errcheck
 
 	t.Run("unregistered request returns 501", func(t *testing.T) {
 		res, err := cli.Get(targetURL + "/abcde")
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer res.Body.Close() //nolint:errcheck
 
 		assert.Equal(t, http.StatusNotImplemented, res.StatusCode)
 	})
@@ -180,7 +180,7 @@ func TestEdgeCases(t *testing.T) {
 			bytes.NewBufferString("this is not json"),
 		)
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer res.Body.Close() //nolint:errcheck
 
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 	})
@@ -199,7 +199,7 @@ func TestEdgeCases(t *testing.T) {
 
 		res, err = cli.Get(targetURL + "/admin/cases")
 		require.NoError(t, err)
-		defer res.Body.Close()
+		defer res.Body.Close() //nolint:errcheck
 
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		actual := mustJSONUnmarshalFromHTTPResponse[httpfakeserver.Mocks](t, res)

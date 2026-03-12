@@ -49,7 +49,7 @@ func (t *SmockerClient) PostMocks(
 	if err != nil {
 		return fmt.Errorf("failed to http request: %w", err)
 	}
-	defer res.Body.Close()
+	defer res.Body.Close() //nolint:errcheck
 
 	if res.StatusCode != http.StatusOK {
 		resBodyBytes, err := io.ReadAll(res.Body)

@@ -72,7 +72,7 @@ func (t *FakeCommand) initCopyFakeCMD() error {
 	if err != nil {
 		return fmt.Errorf("fakecmd is invalid: %s: %w", t.filePathFakeCMD, err)
 	}
-	defer src.Close()
+	defer src.Close() //nolint:errcheck
 
 	srcFI, err := src.Stat()
 	if err != nil {
@@ -89,7 +89,7 @@ func (t *FakeCommand) initCopyFakeCMD() error {
 	if err != nil {
 		return fmt.Errorf("failed to os.Create: %w", err)
 	}
-	defer dst.Close()
+	defer dst.Close() //nolint:errcheck
 
 	if err := dst.Chmod(srcFI.Mode()); err != nil {
 		return fmt.Errorf("failed to Chmod: %w", err)

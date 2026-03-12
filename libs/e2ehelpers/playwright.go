@@ -35,7 +35,7 @@ func (c *PlaywrightTestCaseForSSR) Run(t *testing.T) {
 
 	browser, err := pw.Chromium.Launch()
 	require.NoError(t, err)
-	defer browser.Close()
+	defer browser.Close() //nolint:errcheck
 
 	page, err := browser.NewPage()
 	require.NoError(t, err)

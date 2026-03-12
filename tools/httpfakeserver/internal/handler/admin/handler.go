@@ -14,14 +14,14 @@ func PostAdminCase(caseRepo *mock.Repository) http.HandlerFunc {
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintf(w, "failed to read body")
+			fmt.Fprintf(w, "failed to read body") //nolint:errcheck
 			return
 		}
 
 		c := mock.Mock{}
 		if err := json.Unmarshal(body, &c); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
-			fmt.Fprintf(w, "failed to parse body")
+			fmt.Fprintf(w, "failed to parse body") //nolint:errcheck
 			return
 		}
 
@@ -49,7 +49,7 @@ func GetAdminCase(caseRepo *mock.Repository) http.HandlerFunc {
 		body, err := json.Marshal(ret)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, "failed to marshal mocks")
+			fmt.Fprintf(w, "failed to marshal mocks") //nolint:errcheck
 			return
 		}
 
