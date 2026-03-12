@@ -12,7 +12,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/hcl/v2 v2.24.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/playwright-community/playwright-go v0.5200.0
+	github.com/playwright-community/playwright-go v0.5700.1
 	github.com/smocker-dev/smocker v0.0.0-20240320000158-310c15349c41
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/pkgsite v0.0.0-20250214205047-dd488e5da97a
@@ -27,7 +27,7 @@ require (
 	github.com/cli/safeexec v1.0.1 // indirect
 	github.com/creack/pty v1.1.23 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/deckarep/golang-set/v2 v2.7.0 // indirect
+	github.com/deckarep/golang-set/v2 v2.8.0 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.4 // indirect
