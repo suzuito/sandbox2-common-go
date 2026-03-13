@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
-	"strconv"
 
 	"github.com/suzuito/sandbox2-common-go/libs/utils"
 	"github.com/suzuito/sandbox2-common-go/tools/httpfakeserver/internal/domain/mock"
@@ -18,21 +16,20 @@ type Response = mock.Response
 type Mock = mock.Mock
 type Mocks = mock.Mocks
 
-func Main() int {
+type Options struct {
+	Port          int
+	BasePathAdmin string
+}
+
+func Main(o Options) int {
 	port := 8080
-	portString := os.Getenv("PORT")
-	if portString != "" {
-		var err error
-		port, err = strconv.Atoi(portString)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "failed to convert port into int\n")
-			os.Exit(1)
-		}
+	if o.Port != 0 {
+		port = o.Port
 	}
 
-	basePathAdmin := os.Getenv("BASE_PATH_ADMIN")
-	if basePathAdmin == "" {
-		basePathAdmin = "/admin"
+	basePathAdmin := "/admin"
+	if o.BasePathAdmin != "" {
+		basePathAdmin = o.BasePathAdmin
 	}
 
 	caseRepository := mock.NewRepository()
