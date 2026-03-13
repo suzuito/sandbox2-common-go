@@ -72,3 +72,28 @@ func Main(ctx context.Context, o Options) int {
 
 	return exitCode.Int()
 }
+
+type MainAsyncReturnValue struct {
+	ChServerDone <-chan int
+	Done         func()
+}
+
+func MainAsync(ctx context.Context, o Options) MainAsyncReturnValue {
+	chServerDone := make(chan int)
+
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithCancel(ctx)
+	go func() {
+		exitCode := Main(ctx, o)
+		chServerDone <- exitCode
+	}()
+
+	ret := MainAsyncReturnValue{
+		ChServerDone: chServerDone,
+		Done: func() {
+			cancel()
+		},
+	}
+
+	return ret
+}
