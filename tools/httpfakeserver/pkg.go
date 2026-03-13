@@ -21,7 +21,7 @@ type Options struct {
 	BasePathAdmin string
 }
 
-func Main(o Options) int {
+func Main(ctx context.Context, o Options) int {
 	port := 8080
 	if o.Port != 0 {
 		port = o.Port
@@ -60,7 +60,7 @@ func Main(o Options) int {
 	)
 
 	exitCode := utils.RunHandlerWithGracefulShutdown(
-		context.Background(),
+		ctx,
 		mux,
 		port,
 		utils.Options{

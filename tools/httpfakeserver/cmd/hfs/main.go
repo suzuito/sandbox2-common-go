@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -25,7 +26,9 @@ func main() {
 		basePathAdmin = "/admin"
 	}
 
-	os.Exit(httpfakeserver.Main(httpfakeserver.Options{
+	ctx := context.Background()
+
+	os.Exit(httpfakeserver.Main(ctx, httpfakeserver.Options{
 		Port:          port,
 		BasePathAdmin: basePathAdmin,
 	}))
