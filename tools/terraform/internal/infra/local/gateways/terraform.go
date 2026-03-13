@@ -113,13 +113,13 @@ func (t *terraformGateway) run(
 	stderr := io.MultiWriter(stderrBuffer, t.stderr)
 
 	commandline := fmt.Sprintf("%s %s", commandName, strings.Join(args, " "))
-	fmt.Fprintf(stdout, "\n")
-	fmt.Fprintln(stdout, "*************")
-	fmt.Fprintln(stdout, "*************")
-	fmt.Fprintln(stdout, "*************")
-	fmt.Fprintf(stdout, "==== CMD ====\n")
-	fmt.Fprintf(stdout, "%s\n", commandline)
-	fmt.Fprintf(stdout, "==== OUT ====\n")
+	fmt.Fprintf(stdout, "\n")                //nolint:errcheck
+	fmt.Fprintln(stdout, "*************")    //nolint:errcheck
+	fmt.Fprintln(stdout, "*************")    //nolint:errcheck
+	fmt.Fprintln(stdout, "*************")    //nolint:errcheck
+	fmt.Fprintf(stdout, "==== CMD ====\n")   //nolint:errcheck
+	fmt.Fprintf(stdout, "%s\n", commandline) //nolint:errcheck
+	fmt.Fprintf(stdout, "==== OUT ====\n")   //nolint:errcheck
 	cmd := exec.CommandContext(
 		ctx,
 		commandName,
@@ -135,9 +135,9 @@ func (t *terraformGateway) run(
 			return nil, terrors.Errorf("failed to cmd.Run: %w", err)
 		}
 	}
-	fmt.Fprintf(stdout, "==== END ====\n")
-	fmt.Fprintf(stdout, "exit with %d\n", cmd.ProcessState.ExitCode())
-	fmt.Fprintf(stdout, "\n")
+	fmt.Fprintf(stdout, "==== END ====\n")                             //nolint:errcheck
+	fmt.Fprintf(stdout, "exit with %d\n", cmd.ProcessState.ExitCode()) //nolint:errcheck
+	fmt.Fprintf(stdout, "\n")                                          //nolint:errcheck
 	return &runResult{
 		Cmd:      commandline,
 		ExitCode: cmd.ProcessState.ExitCode(),

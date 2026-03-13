@@ -1,3 +1,4 @@
+GO_SOURCES=$(shell find . -name "*.go" -or -name "go.mod")
 BIN_GOLANGCI_LINT = $(shell go env GOPATH)/bin/golangci-lint
 
 .PHONY: mac-init
@@ -6,7 +7,7 @@ mac-init:
 # golangci-lint だけは go.mod で管理しない。`go install` によるインストールが非推奨とされているため
 # https://golangci-lint.run/welcome/install/#install-from-sources
 $(BIN_GOLANGCI_LINT): Makefile
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v1.64.5
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin v2.11.3
 
 .PHONY: lint
 lint: $(BIN_GOLANGCI_LINT)
@@ -19,7 +20,7 @@ godoc:
 .PHONY: test
 test:
 	mkdir -p cov/ && rm -f cov/*
-	go test -cover ./libs/... ./tools/... -args -test.gocoverdir=$(abspath cov)
+	PATH=$$(go env GOROOT)/bin:$$PATH go test -cover ./libs/... ./tools/... -args -test.gocoverdir=$(abspath cov)
 	sh report-gocovdir.sh cov
 
 .PHONY: e2e
@@ -28,6 +29,7 @@ e2e:
 	make e2e-terraform-check-terraform-rules
 	make e2e-terraform-terraform_on_github_action
 	make e2e-fakecmd-fakecmd
+	make e2e-httpfakeserver-hfs
 
 .PHONY: test
 merge-test-report:
@@ -37,6 +39,7 @@ merge-test-report:
 	,tools/terraform/cov/e2e/check-terraform-rules\
 	,tools/terraform/cov/e2e/terraform_on_github_action\
 	,tools/fakecmd/cov/e2e/fakecmd\
+	,tools/httpfakeserver/cov/e2e/hfs\
 	 -o=textfmt.0.txt
 	grep -v 'libs/e2ehelpers/' textfmt.0.txt > textfmt.1.txt
 	go tool cover -html=textfmt.1.txt -o=gocov.html
@@ -64,6 +67,7 @@ test-ci:
 include Makefile.tools.release.mk
 include Makefile.tools.terraform.mk
 include Makefile.tools.fakecmd.mk
+include Makefile.tools.httpfakeserver.mk
 
 GOOS = $(shell go env GOOS)
 GOARCH = $(shell go env GOARCH)
@@ -80,3 +84,5 @@ build:
 	mv tools/terraform/dist/prd/check-terraform-rules dist/prd/$(GOOS)/$(GOARCH)/
 	make tools/terraform/dist/prd/terraform_on_github_action
 	mv tools/terraform/dist/prd/terraform_on_github_action dist/prd/$(GOOS)/$(GOARCH)/
+	make tools/httpfakeserver/dist/prd/hfs
+	mv tools/httpfakeserver/dist/prd/hfs dist/prd/$(GOOS)/$(GOARCH)/
