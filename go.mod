@@ -7,6 +7,7 @@ toolchain go1.26.1
 require (
 	github.com/Masterminds/semver/v3 v3.4.0
 	github.com/air-verse/air v1.64.5
+	github.com/golang-cz/devslog v0.0.15
 	github.com/google/go-github/v67 v67.0.0
 	github.com/google/go-github/v68 v68.0.0
 	github.com/google/uuid v1.6.0
