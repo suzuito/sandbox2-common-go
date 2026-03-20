@@ -86,3 +86,14 @@ build:
 	mv tools/terraform/dist/prd/terraform_on_github_action dist/prd/$(GOOS)/$(GOARCH)/
 	make tools/httpfakeserver/dist/prd/hfs
 	mv tools/httpfakeserver/dist/prd/hfs dist/prd/$(GOOS)/$(GOARCH)/
+
+.PHONY: new-sandbox2-common-go-dev
+new-sandbox2-common-go-dev:
+	git checkout main
+	git pull
+	git worktree add ../worktrees/sandbox2-common-go/$$BRANCH
+	code ../worktrees/sandbox2-common-go/$$BRANCH
+
+.PHONY: list-sandbox2-common-go-dev
+list-sandbox2-common-go-dev:
+	git worktree list
